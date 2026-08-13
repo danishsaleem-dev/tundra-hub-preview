@@ -76,7 +76,7 @@ export function AthleteDashboardContent() {
           </div>
         </div>
         <div className="text-left sm:text-right">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-300">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-300">
             Total NIL Earnings
           </p>
           <p className="text-2xl font-bold text-white">$28,500</p>
@@ -117,7 +117,7 @@ export function AthleteDashboardContent() {
               <li key={deal.brand} className="py-2.5 first:pt-0 last:pb-0">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium text-[#0B1330]">
+                    <p className="text-sm font-semibold text-[#0B1330]">
                       {deal.brand}
                     </p>
                     <p className="text-xs text-neutral-text">{deal.ends}</p>

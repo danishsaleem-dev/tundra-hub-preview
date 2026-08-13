@@ -178,6 +178,7 @@ export function RecruiterDashboardContent() {
               <ListRow
                 key={task.title}
                 title={task.title}
+                accent={task.priority}
                 trailing={
                   <>
                     <StatusChip
