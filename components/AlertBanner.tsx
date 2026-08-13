@@ -55,14 +55,14 @@ export function AlertBanner({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-lg border-l-4 px-4 py-3",
+        "flex items-center gap-2.5 rounded-lg border-l-4 px-3.5 py-2.5",
         styles.bg,
         styles.border,
         className,
       )}
     >
-      <Icon className={cn("h-4 w-4 shrink-0", styles.icon)} />
-      <p className="flex-1 text-sm text-[#0B1330]">{message}</p>
+      <Icon className={cn("h-3.5 w-3.5 shrink-0", styles.icon)} />
+      <p className="flex-1 text-sm leading-snug text-[#0B1330]">{message}</p>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   );

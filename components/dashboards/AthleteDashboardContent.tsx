@@ -2,6 +2,7 @@ import { Sparkles } from "lucide-react";
 import { KpiCard } from "@/components/KpiCard";
 import { Panel } from "@/components/Panel";
 import { StatusChip } from "@/components/StatusChip";
+import { ListRow } from "@/components/ListRow";
 import type { StatusVariant } from "@/lib/status";
 
 interface DealRow {
@@ -61,24 +62,24 @@ const QUICK_ACTIONS = ["What do I owe?", "Deal timeline", "My documents"];
 
 export function AthleteDashboardContent() {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 rounded-xl bg-gradient-to-r from-surface-navy to-brand-blue px-6 py-5 sm:flex-row sm:items-center">
+    <div className="space-y-5">
+      <div className="flex flex-col justify-between gap-4 rounded-xl bg-gradient-to-r from-surface-navy to-brand-blue px-6 py-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-semibold text-white">
             CF
           </span>
           <div>
-            <p className="text-lg font-bold text-white">Caleb Fontaine</p>
-            <p className="text-sm text-slate-300">
+            <p className="text-base font-bold text-white">Caleb Fontaine</p>
+            <p className="text-xs text-slate-300">
               QB · University of Georgia · Junior
             </p>
           </div>
         </div>
         <div className="text-left sm:text-right">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-300">
             Total NIL Earnings
           </p>
-          <p className="text-3xl font-bold text-white">$28,500</p>
+          <p className="text-2xl font-bold text-white">$28,500</p>
         </div>
       </div>
 
@@ -109,11 +110,11 @@ export function AthleteDashboardContent() {
         />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="My NIL Deals">
           <ul className="divide-y divide-card-tint">
             {DEALS.map((deal) => (
-              <li key={deal.brand} className="py-3 first:pt-0 last:pb-0">
+              <li key={deal.brand} className="py-2.5 first:pt-0 last:pb-0">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-medium text-[#0B1330]">
@@ -131,7 +132,7 @@ export function AthleteDashboardContent() {
                     />
                   </div>
                 </div>
-                <p className="mt-2 text-xs">
+                <p className="mt-1.5 text-xs">
                   <span className="font-medium text-success-text">
                     Paid: {deal.paid}
                   </span>{" "}
@@ -145,12 +146,12 @@ export function AthleteDashboardContent() {
         </Panel>
 
         <Panel title="Tundra Assistant" icon={Sparkles} tone="dark">
-          <p className="text-sm leading-relaxed text-slate-300">
+          <p className="text-xs leading-relaxed text-slate-300">
             Your Q2 Velocity payment of $4,500 is overdue. Your agent has
             been notified and is following up with the brand. No action
             required from you.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {QUICK_ACTIONS.map((action) => (
               <button
                 key={action}
@@ -161,7 +162,7 @@ export function AthleteDashboardContent() {
               </button>
             ))}
           </div>
-          <p className="mt-4 border-t border-white/10 pt-3 text-xs text-slate-500">
+          <p className="mt-3 border-t border-white/10 pt-2.5 text-[11px] text-slate-500">
             MOCK AI ASSISTANT · Not a real integration
           </p>
         </Panel>
@@ -170,18 +171,14 @@ export function AthleteDashboardContent() {
       <Panel title="Compliance">
         <ul className="divide-y divide-card-tint">
           {COMPLIANCE.map((item) => (
-            <li
+            <ListRow
               key={item.label}
-              className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
-            >
-              <div>
-                <p className="text-sm font-medium text-[#0B1330]">
-                  {item.label}
-                </p>
-                <p className="text-xs text-neutral-text">{item.due}</p>
-              </div>
-              <StatusChip variant={item.status} label={item.statusLabel} />
-            </li>
+              title={item.label}
+              meta={item.due}
+              trailing={
+                <StatusChip variant={item.status} label={item.statusLabel} />
+              }
+            />
           ))}
         </ul>
       </Panel>

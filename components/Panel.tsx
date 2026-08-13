@@ -24,7 +24,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "rounded-xl p-5",
+        "rounded-xl p-4",
         isDark
           ? "bg-surface-navy-deep text-white"
           : "border border-card-tint bg-white shadow-sm",
@@ -33,11 +33,11 @@ export function Panel({
     >
       {title ? (
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {Icon ? (
               <Icon
                 className={cn(
-                  "h-4 w-4",
+                  "h-3.5 w-3.5",
                   isDark ? "text-brand-blue" : "text-neutral-text",
                 )}
               />
@@ -54,7 +54,7 @@ export function Panel({
           {action}
         </div>
       ) : null}
-      <div className={cn(title ? "mt-4" : undefined)}>{children}</div>
+      <div className={cn(title ? "mt-3" : undefined)}>{children}</div>
     </div>
   );
 }

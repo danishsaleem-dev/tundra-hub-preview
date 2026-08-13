@@ -29,19 +29,19 @@ export function KpiCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-card-tint border-t-[3px] bg-white px-5 py-4 shadow-sm",
+        "rounded-xl border border-card-tint border-t-[3px] bg-white px-4 py-3.5 shadow-sm",
         ACCENT_BORDER[accent],
         className,
       )}
     >
-      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-text">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-text">
         {label}
       </p>
-      <p className="mt-2 text-3xl font-bold tracking-tight text-[#0B1330]">
+      <p className="mt-1.5 text-2xl font-bold tracking-tight text-[#0B1330]">
         {value}
       </p>
       {subtext ? (
-        <p className="mt-1 text-sm text-neutral-text">{subtext}</p>
+        <p className="mt-1 text-xs text-neutral-text">{subtext}</p>
       ) : null}
     </div>
   );

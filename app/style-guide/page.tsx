@@ -15,6 +15,8 @@ import { Avatar } from "@/components/Avatar";
 import { Badge } from "@/components/Badge";
 import { ProgressBar } from "@/components/ProgressBar";
 import { SectionHeader } from "@/components/SectionHeader";
+import { ListRow } from "@/components/ListRow";
+import { ActivityItem } from "@/components/ActivityItem";
 import type { StatusVariant } from "@/lib/status";
 import { TopBarDemo } from "./TopBarDemo";
 
@@ -442,24 +444,83 @@ export default function StyleGuidePage() {
         </Section>
 
         <Section
+          title="ListRow"
+          description="Title/meta/trailing row for Panel lists — optional colored accent bar and tag chips."
+        >
+          <Panel title="Deal Health">
+            <ul className="divide-y divide-card-tint">
+              <ListRow
+                title="Velocity Apparel — Caleb Fontaine"
+                meta="$18,000 · Ends 2026-08-31"
+                trailing={<StatusChip variant="success" label="Active" />}
+              />
+              <ListRow
+                title="Glacier Energy — Marcus Bellamy"
+                meta="$24,000 · Ends 2026-10-14"
+                trailing={<StatusChip variant="success" label="Active" />}
+                tags={[{ variant: "warning", label: "Payment overdue 21 days" }]}
+              />
+              <ListRow
+                title="Follow up with Velocity Apparel on overdue payment"
+                meta="→ Marcus Webb"
+                accent="critical"
+                trailing={
+                  <>
+                    <StatusChip variant="critical" label="Critical" />
+                    <span className="text-xs font-medium text-critical-text">
+                      Overdue
+                    </span>
+                  </>
+                }
+              />
+            </ul>
+          </Panel>
+        </Section>
+
+        <Section
+          title="ActivityItem"
+          description="Colored dot + title + meta — compact feed for a Recent Activity panel."
+        >
+          <Panel title="Recent Activity">
+            <ul className="divide-y divide-card-tint">
+              <ActivityItem
+                title="Sent payment reminder to Velocity Apparel for pay2"
+                meta="Marcus Webb · 85d ago"
+                dotColor="bg-brand-blue"
+              />
+              <ActivityItem
+                title="Logged contact with Quinton Hargrove family (phone call)"
+                meta="Aaliyah Simmons · 85d ago"
+                dotColor="bg-violet-500"
+              />
+              <ActivityItem
+                title="Signed Caleb Fontaine (re-enrollment for 2026 season)"
+                meta="Marcus Webb · 87d ago"
+                dotColor="bg-success-text"
+              />
+            </ul>
+          </Panel>
+        </Section>
+
+        <Section
           title="Panel"
           description="Generic container — default and dark (AI briefing) tones."
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <Panel title="Deal Health">
-              <ul className="space-y-2 text-sm text-[#0B1330]">
-                <li className="flex items-center justify-between">
-                  <span>Velocity Apparel — Caleb Fontaine</span>
-                  <StatusChip variant="success" label="Active" />
-                </li>
-                <li className="flex items-center justify-between">
-                  <span>Glacier Energy — Marcus Bellamy</span>
-                  <StatusChip variant="warning" label="Payment Overdue" />
-                </li>
+              <ul className="divide-y divide-card-tint">
+                <ListRow
+                  title="Velocity Apparel — Caleb Fontaine"
+                  trailing={<StatusChip variant="success" label="Active" />}
+                />
+                <ListRow
+                  title="Glacier Energy — Marcus Bellamy"
+                  trailing={<StatusChip variant="warning" label="Payment Overdue" />}
+                />
               </ul>
             </Panel>
             <Panel title="AI Executive Briefing" icon={Sparkles} tone="dark">
-              <p className="text-sm leading-relaxed text-slate-300">
+              <p className="text-xs leading-relaxed text-slate-300">
                 <span className="font-semibold text-white">
                   Revenue Risk:
                 </span>{" "}
@@ -469,7 +530,7 @@ export default function StyleGuidePage() {
                 </span>{" "}
                 require immediate follow-up.
               </p>
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 border-t border-white/10 pt-2.5 text-[11px] text-slate-500">
                 MOCK AI OUTPUT · Not a real integration
               </p>
             </Panel>

@@ -2,6 +2,7 @@ import { Sparkles } from "lucide-react";
 import { KpiCard } from "@/components/KpiCard";
 import { Panel } from "@/components/Panel";
 import { StatusChip } from "@/components/StatusChip";
+import { ListRow } from "@/components/ListRow";
 import { DataTable, type Column } from "@/components/DataTable";
 import type { StatusVariant } from "@/lib/status";
 
@@ -107,12 +108,12 @@ const PROSPECT_COLUMNS: Column<ProspectRow>[] = [
 
 export function RecruiterDashboardContent() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <h2 className="text-2xl font-bold text-[#0B1330]">
+        <h2 className="text-xl font-bold text-[#0B1330]">
           Good morning, Marcus
         </h2>
-        <p className="mt-1 text-sm text-neutral-text">
+        <p className="mt-1 text-xs text-neutral-text">
           May 19, 2026 · Georgia Region
         </p>
       </div>
@@ -144,9 +145,9 @@ export function RecruiterDashboardContent() {
         />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="AI Prospect Summary" icon={Sparkles} tone="dark">
-          <div className="space-y-3 text-sm leading-relaxed text-slate-300">
+          <div className="space-y-2.5 text-xs leading-relaxed text-slate-300">
             <p>
               <span className="font-semibold text-white">
                 Isaiah Drummond —
@@ -166,7 +167,7 @@ export function RecruiterDashboardContent() {
               2 hot, 1 warm, 0 cold. On track for monthly close target.
             </p>
           </div>
-          <p className="mt-4 border-t border-white/10 pt-3 text-xs text-slate-500">
+          <p className="mt-3 border-t border-white/10 pt-2.5 text-[11px] text-slate-500">
             MOCK AI · Tundra Recruiter Intelligence
           </p>
         </Panel>
@@ -174,29 +175,27 @@ export function RecruiterDashboardContent() {
         <Panel title="My Open Tasks">
           <ul className="divide-y divide-card-tint">
             {TASKS.map((task) => (
-              <li
+              <ListRow
                 key={task.title}
-                className="flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
-              >
-                <p className="min-w-0 flex-1 text-sm font-medium text-[#0B1330]">
-                  {task.title}
-                </p>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <StatusChip
-                    variant={task.priority}
-                    label={task.priorityLabel}
-                  />
-                  <span
-                    className={
-                      task.overdue
-                        ? "text-xs font-medium text-critical-text"
-                        : "text-xs text-neutral-text"
-                    }
-                  >
-                    {task.due}
-                  </span>
-                </div>
-              </li>
+                title={task.title}
+                trailing={
+                  <>
+                    <StatusChip
+                      variant={task.priority}
+                      label={task.priorityLabel}
+                    />
+                    <span
+                      className={
+                        task.overdue
+                          ? "text-xs font-medium text-critical-text"
+                          : "text-xs text-neutral-text"
+                      }
+                    >
+                      {task.due}
+                    </span>
+                  </>
+                }
+              />
             ))}
           </ul>
         </Panel>

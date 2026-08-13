@@ -3,6 +3,8 @@ import { AlertBanner } from "@/components/AlertBanner";
 import { KpiCard } from "@/components/KpiCard";
 import { Panel } from "@/components/Panel";
 import { StatusChip } from "@/components/StatusChip";
+import { ListRow, type ListRowTag } from "@/components/ListRow";
+import { ActivityItem } from "@/components/ActivityItem";
 import type { StatusVariant } from "@/lib/status";
 
 interface PaymentRow {
@@ -107,10 +109,151 @@ const TASKS: TaskRow[] = [
   },
 ];
 
+interface DealHealthRow {
+  title: string;
+  meta: string;
+  status: StatusVariant;
+  statusLabel: string;
+  tags?: ListRowTag[];
+}
+
+const DEAL_HEALTH: DealHealthRow[] = [
+  {
+    title: "Velocity Apparel – Caleb Fontaine",
+    meta: "$18,000 · Ends 2026-08-31",
+    status: "success",
+    statusLabel: "Active",
+  },
+  {
+    title: "Glacier Energy – Marcus Bellamy",
+    meta: "$24,000 · Ends 2026-10-14",
+    status: "success",
+    statusLabel: "Active",
+    tags: [{ variant: "warning", label: "Payment overdue 21 days" }],
+  },
+  {
+    title: "Champion's Table – Caleb Fontaine",
+    meta: "$10,500 · Ends 2026-12-31",
+    status: "success",
+    statusLabel: "Active",
+  },
+  {
+    title: "ProEdge Training – Trevon Garris",
+    meta: "$6,500 · Ends 2026-11-30",
+    status: "warning",
+    statusLabel: "Pre-Launch",
+    tags: [
+      { variant: "warning", label: "Compliance hold – disclosure pending" },
+      { variant: "warning", label: "Contract unsigned" },
+    ],
+  },
+  {
+    title: "SouthGrid Auto – Jaylon Prescott",
+    meta: "$15,000 · Ends 2026-10-31",
+    status: "success",
+    statusLabel: "Active",
+  },
+];
+
+interface ComplianceRow {
+  title: string;
+  meta: string;
+  status: StatusVariant;
+  statusLabel: string;
+}
+
+const COMPLIANCE: ComplianceRow[] = [
+  {
+    title: "NIL Activity Disclosure – Velocity Apparel",
+    meta: "Caleb Fontaine · Due 2025-09-10",
+    status: "success",
+    statusLabel: "Submitted",
+  },
+  {
+    title: "Representation Agreement – DeShawn Tillery",
+    meta: "Due 2026-05-25",
+    status: "warning",
+    statusLabel: "Pending Review",
+  },
+  {
+    title: "W-9 – Marcus Bellamy",
+    meta: "Due 2026-01-15",
+    status: "success",
+    statusLabel: "Complete",
+  },
+  {
+    title: "NIL Activity Disclosure – ProEdge Training",
+    meta: "Trevon Garris · Due 2026-05-10",
+    status: "critical",
+    statusLabel: "Overdue",
+  },
+  {
+    title: "Eligibility Certification – Jaylon Prescott",
+    meta: "Due 2026-08-01",
+    status: "success",
+    statusLabel: "Complete",
+  },
+  {
+    title: "1099 Filing – Caleb Fontaine",
+    meta: "Due 2027-01-31",
+    status: "neutral",
+    statusLabel: "Pending",
+  },
+];
+
+interface ActivityRow {
+  title: string;
+  meta: string;
+  dotColor: string;
+}
+
+const ACTIVITY: ActivityRow[] = [
+  {
+    title: "Sent payment reminder to Velocity Apparel for pay2",
+    meta: "Marcus Webb · 85d ago",
+    dotColor: "bg-brand-blue",
+  },
+  {
+    title: "Logged contact with Quinton Hargrove family (phone call)",
+    meta: "Aaliyah Simmons · 85d ago",
+    dotColor: "bg-violet-500",
+  },
+  {
+    title: "Updated Glacier Energy deal stage – escalated to brand director",
+    meta: "Darnell Okafor · 86d ago",
+    dotColor: "bg-brand-blue",
+  },
+  {
+    title: "Uploaded draft contract for Trevon Garris (ProEdge deal)",
+    meta: "Jordan Pierce · 86d ago",
+    dotColor: "bg-surface-navy",
+  },
+  {
+    title: "Signed Caleb Fontaine (re-enrollment for 2026 season)",
+    meta: "Marcus Webb · 87d ago",
+    dotColor: "bg-success-text",
+  },
+  {
+    title: "Intro meeting scheduled with Brendan Faulkner and family",
+    meta: "Tyrese Harmon · 88d ago",
+    dotColor: "bg-violet-500",
+  },
+  {
+    title: "Champion's Table Q2 invoice generated and sent",
+    meta: "Darnell Okafor · 89d ago",
+    dotColor: "bg-brand-blue",
+  },
+  {
+    title: "System compliance review flagged Trevon Garris disclosure overdue",
+    meta: "Admin · 91d ago",
+    dotColor: "bg-warning-text",
+  },
+];
+
 export function AdminDashboardContent() {
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
+    <div className="space-y-5">
+      <div className="space-y-2.5">
         <AlertBanner
           variant="critical"
           message={
@@ -185,85 +328,62 @@ export function AdminDashboardContent() {
         />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <Panel title="Payment Health" className="lg:col-span-1">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Panel title="Payment Health">
           <ul className="divide-y divide-card-tint">
             {PAYMENTS.map((payment) => (
-              <li
+              <ListRow
                 key={payment.label}
-                className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-[#0B1330]">
-                    {payment.label}
-                  </p>
-                  <p className="truncate text-xs text-neutral-text">
-                    {payment.brand}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="text-sm font-semibold text-[#0B1330]">
-                    {payment.amount}
-                  </span>
-                  <StatusChip
-                    variant={payment.status}
-                    label={payment.statusLabel}
-                  />
-                </div>
-              </li>
+                title={payment.label}
+                meta={payment.brand}
+                trailing={
+                  <>
+                    <span className="text-sm font-semibold text-[#0B1330]">
+                      {payment.amount}
+                    </span>
+                    <StatusChip
+                      variant={payment.status}
+                      label={payment.statusLabel}
+                    />
+                  </>
+                }
+              />
             ))}
           </ul>
         </Panel>
 
-        <Panel title="Priority Actions" className="lg:col-span-1">
+        <Panel title="Priority Actions">
           <ul className="divide-y divide-card-tint">
             {TASKS.map((task) => (
-              <li
+              <ListRow
                 key={task.title}
-                className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
-              >
-                <span
-                  className={
-                    task.priority === "critical"
-                      ? "mt-1 h-full w-1 shrink-0 self-stretch rounded-full bg-critical-text"
-                      : "mt-1 h-full w-1 shrink-0 self-stretch rounded-full bg-warning-text"
-                  }
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-[#0B1330]">
-                    {task.title}
-                  </p>
-                  <p className="mt-1 text-xs text-neutral-text">
-                    → {task.owner}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <StatusChip
-                    variant={task.priority}
-                    label={task.priorityLabel}
-                  />
-                  <span
-                    className={
-                      task.overdue
-                        ? "text-xs font-medium text-critical-text"
-                        : "text-xs text-neutral-text"
-                    }
-                  >
-                    {task.due}
-                  </span>
-                </div>
-              </li>
+                title={task.title}
+                meta={`→ ${task.owner}`}
+                accent={task.priority}
+                trailing={
+                  <>
+                    <StatusChip
+                      variant={task.priority}
+                      label={task.priorityLabel}
+                    />
+                    <span
+                      className={
+                        task.overdue
+                          ? "text-xs font-medium text-critical-text"
+                          : "text-xs text-neutral-text"
+                      }
+                    >
+                      {task.due}
+                    </span>
+                  </>
+                }
+              />
             ))}
           </ul>
         </Panel>
 
-        <Panel
-          title="AI Executive Briefing"
-          icon={Sparkles}
-          tone="dark"
-          className="lg:col-span-1"
-        >
-          <div className="space-y-3 text-sm leading-relaxed text-slate-300">
+        <Panel title="AI Executive Briefing" icon={Sparkles} tone="dark">
+          <div className="space-y-2.5 text-xs leading-relaxed text-slate-300">
             <p>
               <span className="font-semibold text-white">Revenue Risk:</span>{" "}
               Two overdue payments totaling{" "}
@@ -278,19 +398,69 @@ export function AdminDashboardContent() {
                 Compliance Hold:
               </span>{" "}
               Trevon Garris&apos;s ProEdge deal is blocked pending disclosure
-              form. Risk to $6,500 in contract value if not cleared before
-              May 25 deadline.
+              form. Risk to $6,500 if not cleared before May 25.
             </p>
             <p>
               <span className="font-semibold text-white">Pipeline:</span>{" "}
               Quinton Hargrove (#4 national safety) and Isaiah Drummond (#12
-              national QB) are in final stages. Close both this week to hit
-              monthly signing target.
+              national QB) are in final stages. Close both this week.
             </p>
           </div>
-          <p className="mt-4 border-t border-white/10 pt-3 text-xs text-slate-500">
+          <p className="mt-3 border-t border-white/10 pt-2.5 text-[11px] text-slate-500">
             MOCK AI OUTPUT · Tundra Intelligence v1 · Updated May 19, 2026
           </p>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Panel title="Deal Health">
+          <ul className="divide-y divide-card-tint">
+            {DEAL_HEALTH.map((deal) => (
+              <ListRow
+                key={deal.title}
+                title={deal.title}
+                meta={deal.meta}
+                tags={deal.tags}
+                trailing={
+                  <StatusChip
+                    variant={deal.status}
+                    label={deal.statusLabel}
+                  />
+                }
+              />
+            ))}
+          </ul>
+        </Panel>
+
+        <Panel title="Compliance Status">
+          <ul className="divide-y divide-card-tint">
+            {COMPLIANCE.map((item) => (
+              <ListRow
+                key={item.title}
+                title={item.title}
+                meta={item.meta}
+                trailing={
+                  <StatusChip
+                    variant={item.status}
+                    label={item.statusLabel}
+                  />
+                }
+              />
+            ))}
+          </ul>
+        </Panel>
+
+        <Panel title="Recent Activity">
+          <ul className="max-h-80 divide-y divide-card-tint overflow-y-auto">
+            {ACTIVITY.map((item) => (
+              <ActivityItem
+                key={item.title}
+                title={item.title}
+                meta={item.meta}
+                dotColor={item.dotColor}
+              />
+            ))}
+          </ul>
         </Panel>
       </div>
     </div>
