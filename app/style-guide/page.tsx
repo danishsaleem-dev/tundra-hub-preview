@@ -17,6 +17,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { SectionHeader } from "@/components/SectionHeader";
 import { ListRow } from "@/components/ListRow";
 import { ActivityItem } from "@/components/ActivityItem";
+import { DealRow } from "@/components/DealRow";
 import type { StatusVariant } from "@/lib/status";
 import { TopBarDemo } from "./TopBarDemo";
 
@@ -119,6 +120,136 @@ const RECRUITER_COLUMNS: Column<RecruiterRow>[] = [
     header: "Prospects",
     align: "right",
     render: (row) => row.prospects,
+  },
+];
+
+interface AthleteRow {
+  name: string;
+  location: string;
+  position: string;
+  school: string;
+  yearEligibility: string;
+  recruiter: string;
+  compliance: StatusVariant;
+  complianceLabel: string;
+  onboarding: StatusVariant;
+  onboardingLabel: string;
+  deals: string;
+}
+
+const ATHLETES: AthleteRow[] = [
+  {
+    name: "Caleb Fontaine",
+    location: "Alpharetta, GA",
+    position: "QB",
+    school: "University of Georgia",
+    yearEligibility: "Junior · Eligible",
+    recruiter: "Marcus Webb",
+    compliance: "success",
+    complianceLabel: "Compliant",
+    onboarding: "success",
+    onboardingLabel: "Complete",
+    deals: "2 active · $28,500",
+  },
+  {
+    name: "DeShawn Tillery",
+    location: "Macon, GA",
+    position: "WR",
+    school: "Georgia Tech",
+    yearEligibility: "Sophomore · Eligible",
+    recruiter: "Marcus Webb",
+    compliance: "warning",
+    complianceLabel: "Pending Review",
+    onboarding: "success",
+    onboardingLabel: "Complete",
+    deals: "1 active · $9,000",
+  },
+  {
+    name: "Marcus Bellamy",
+    location: "Jacksonville, FL",
+    position: "RB",
+    school: "University of Florida",
+    yearEligibility: "Senior · Final Season",
+    recruiter: "Darnell Okafor",
+    compliance: "success",
+    complianceLabel: "Compliant",
+    onboarding: "success",
+    onboardingLabel: "Complete",
+    deals: "2 active · $41,000",
+  },
+  {
+    name: "Trevon Garris",
+    location: "Gainesville, GA",
+    position: "OLB",
+    school: "Kennesaw State University",
+    yearEligibility: "Junior · Eligible",
+    recruiter: "Jordan Pierce",
+    compliance: "critical",
+    complianceLabel: "Action Required",
+    onboarding: "warning",
+    onboardingLabel: "In Progress",
+    deals: "1 active · $6,500",
+  },
+  {
+    name: "Jaylon Prescott",
+    location: "Athens, GA",
+    position: "CB",
+    school: "University of Georgia",
+    yearEligibility: "Senior · Eligible",
+    recruiter: "Tyrese Harmon",
+    compliance: "success",
+    complianceLabel: "Compliant",
+    onboarding: "success",
+    onboardingLabel: "Complete",
+    deals: "1 active · $15,000",
+  },
+];
+
+const ATHLETE_COLUMNS: Column<AthleteRow>[] = [
+  {
+    key: "name",
+    header: "Athlete",
+    render: (row) => (
+      <div className="flex items-center gap-2.5">
+        <Avatar name={row.name} size="sm" />
+        <div className="leading-tight">
+          <p className="font-medium text-[#0B1330]">{row.name}</p>
+          <p className="text-xs text-neutral-text">{row.location}</p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: "position",
+    header: "Position",
+    render: (row) => <Badge label={row.position} />,
+  },
+  { key: "school", header: "School", render: (row) => row.school },
+  {
+    key: "year",
+    header: "Year / Eligibility",
+    render: (row) => row.yearEligibility,
+  },
+  { key: "recruiter", header: "Recruiter", render: (row) => row.recruiter },
+  {
+    key: "compliance",
+    header: "Compliance",
+    render: (row) => (
+      <StatusChip variant={row.compliance} label={row.complianceLabel} />
+    ),
+  },
+  {
+    key: "onboarding",
+    header: "Onboarding",
+    render: (row) => (
+      <StatusChip variant={row.onboarding} label={row.onboardingLabel} />
+    ),
+  },
+  {
+    key: "deals",
+    header: "Deals",
+    align: "right",
+    render: (row) => row.deals,
   },
 ];
 
@@ -439,6 +570,107 @@ export default function StyleGuidePage() {
               columns={RECRUITER_COLUMNS}
               rows={RECRUITER_ROWS}
               rowKey={(row) => row.name}
+            />
+          </div>
+        </Section>
+
+        <Section
+          title="Full Table Pattern — Athletes"
+          description="Page header, search, and a data-dense roster table — the shared shell a real Athletes screen would use."
+        >
+          <div className="rounded-xl border border-card-tint bg-white p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-[#0B1330]">Athletes</h3>
+                <p className="text-xs text-neutral-text">
+                  {ATHLETES.length} athletes in roster
+                </p>
+              </div>
+              <Button icon={<Plus className="h-3.5 w-3.5" />}>
+                Add Athlete
+              </Button>
+            </div>
+            <SearchInput
+              placeholder="Search athletes..."
+              className="mt-4 max-w-sm"
+            />
+            <div className="mt-4">
+              <DataTable
+                columns={ATHLETE_COLUMNS}
+                rows={ATHLETES}
+                rowKey={(row) => row.name}
+              />
+            </div>
+          </div>
+        </Section>
+
+        <Section
+          title="Collapsible Row Pattern — NIL Deals"
+          description="DealRow — click to expand deal details, deliverables, risk flags, and payment summary."
+        >
+          <div className="space-y-3">
+            <DealRow
+              code="V"
+              title="Velocity Apparel – Caleb Fontaine"
+              brand="Velocity Apparel"
+              athlete="Caleb Fontaine"
+              deadline="2026-08-31"
+              chips={[
+                { variant: "success", label: "Active" },
+                { variant: "success", label: "Executed" },
+              ]}
+              amount="$18,000"
+              paid="$9,000"
+              due="$9,000"
+              defaultOpen
+              details={[
+                { label: "Contract Status", value: "Executed" },
+                { label: "Start Date", value: "2025-09-01" },
+                { label: "End Date", value: "2026-08-31" },
+                { label: "Compliance", value: "Cleared" },
+              ]}
+              deliverables={[
+                "4 Instagram posts/month",
+                "2 in-store appearances",
+                "Jersey co-branding",
+              ]}
+              riskFlags={[]}
+              paymentSummary={{
+                total: "$18,000",
+                paid: "$9,000",
+                outstanding: "$9,000",
+              }}
+            />
+            <DealRow
+              code="G"
+              title="Glacier Energy – Marcus Bellamy"
+              brand="Glacier Energy Drinks"
+              athlete="Marcus Bellamy"
+              deadline="2026-10-14"
+              chips={[
+                { variant: "success", label: "Active" },
+                { variant: "success", label: "Executed" },
+                { variant: "warning", label: "1 Risk Flag" },
+              ]}
+              amount="$24,000"
+              paid="$8,000"
+              due="$16,000"
+              details={[
+                { label: "Contract Status", value: "Executed" },
+                { label: "Start Date", value: "2025-10-14" },
+                { label: "End Date", value: "2026-10-14" },
+                { label: "Compliance", value: "Cleared" },
+              ]}
+              deliverables={[
+                "6 social posts/quarter",
+                "1 campus activation event",
+              ]}
+              riskFlags={["Payment overdue 21 days"]}
+              paymentSummary={{
+                total: "$24,000",
+                paid: "$8,000",
+                outstanding: "$16,000",
+              }}
             />
           </div>
         </Section>

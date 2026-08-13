@@ -21,7 +21,7 @@ export function NavShell({ role, className }: NavShellProps) {
   return (
     <aside
       className={cn(
-        "flex h-full w-64 shrink-0 flex-col bg-surface-navy",
+        "flex h-full w-56 shrink-0 flex-col bg-surface-navy",
         className,
       )}
     >

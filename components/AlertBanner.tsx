@@ -5,26 +5,34 @@ import type { StatusVariant } from "@/lib/status";
 
 const VARIANT_STYLES: Record<
   StatusVariant,
-  { bg: string; border: string; icon: string }
+  { bg: string; border: string; text: string; icon: string }
 > = {
   critical: {
     bg: "bg-critical-bg",
-    border: "border-l-critical-text",
+    border:
+      "border-l-critical-text border-t-critical-text/20 border-r-critical-text/20 border-b-critical-text/20",
+    text: "text-critical-text",
     icon: "text-critical-text",
   },
   warning: {
     bg: "bg-warning-bg",
-    border: "border-l-warning-text",
+    border:
+      "border-l-warning-text border-t-warning-text/20 border-r-warning-text/20 border-b-warning-text/20",
+    text: "text-warning-text",
     icon: "text-warning-text",
   },
   success: {
     bg: "bg-success-bg",
-    border: "border-l-success-text",
+    border:
+      "border-l-success-text border-t-success-text/20 border-r-success-text/20 border-b-success-text/20",
+    text: "text-success-text",
     icon: "text-success-text",
   },
   neutral: {
     bg: "bg-neutral-bg",
-    border: "border-l-neutral-text",
+    border:
+      "border-l-neutral-text border-t-neutral-text/20 border-r-neutral-text/20 border-b-neutral-text/20",
+    text: "text-neutral-text",
     icon: "text-neutral-text",
   },
 };
@@ -55,14 +63,16 @@ export function AlertBanner({
   return (
     <div
       className={cn(
-        "flex items-center gap-2.5 rounded-lg border-l-4 px-3.5 py-2.5",
+        "flex items-center gap-2.5 rounded-lg border border-l-4 px-3.5 py-2.5",
         styles.bg,
         styles.border,
         className,
       )}
     >
       <Icon className={cn("h-3.5 w-3.5 shrink-0", styles.icon)} />
-      <p className="flex-1 text-sm leading-snug text-[#0B1330]">{message}</p>
+      <p className={cn("flex-1 text-sm leading-snug", styles.text)}>
+        {message}
+      </p>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   );

@@ -11,6 +11,14 @@ const ACCENT_BORDER: Record<KpiAccent, string> = {
   neutral: "border-t-neutral-text",
 };
 
+const ACCENT_VALUE: Record<KpiAccent, string> = {
+  brand: "text-[#0B1330]",
+  success: "text-success-text",
+  warning: "text-warning-text",
+  critical: "text-critical-text",
+  neutral: "text-[#0B1330]",
+};
+
 export interface KpiCardProps {
   label: string;
   value: string;
@@ -34,10 +42,15 @@ export function KpiCard({
         className,
       )}
     >
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-text">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-neutral-text">
         {label}
       </p>
-      <p className="mt-1.5 text-2xl font-bold tracking-tight text-[#0B1330]">
+      <p
+        className={cn(
+          "mt-1.5 text-2xl font-bold tracking-tight",
+          ACCENT_VALUE[accent],
+        )}
+      >
         {value}
       </p>
       {subtext ? (

@@ -328,7 +328,7 @@ export function AdminDashboardContent() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid items-start gap-4 lg:grid-cols-3">
         <Panel title="Payment Health">
           <ul className="divide-y divide-card-tint">
             {PAYMENTS.map((payment) => (
@@ -412,7 +412,7 @@ export function AdminDashboardContent() {
         </Panel>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid items-start gap-4 lg:grid-cols-3">
         <Panel title="Deal Health">
           <ul className="divide-y divide-card-tint">
             {DEAL_HEALTH.map((deal) => (

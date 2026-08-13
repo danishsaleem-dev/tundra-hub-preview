@@ -145,7 +145,7 @@ export function RecruiterDashboardContent() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-2">
         <Panel title="AI Prospect Summary" icon={Sparkles} tone="dark">
           <div className="space-y-2.5 text-xs leading-relaxed text-slate-300">
             <p>
