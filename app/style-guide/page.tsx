@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Sparkles } from "lucide-react";
+import Image from "next/image";
+import { Sparkles, Plus, Upload, Clock, AlertTriangle } from "lucide-react";
 import { NavShell } from "@/components/NavShell";
 import { KpiCard, type KpiAccent } from "@/components/KpiCard";
 import { AlertBanner } from "@/components/AlertBanner";
 import { StatusChip } from "@/components/StatusChip";
 import { Panel } from "@/components/Panel";
 import { DataTable, type Column } from "@/components/DataTable";
+import { Button } from "@/components/Button";
+import { SegmentedControl } from "@/components/SegmentedControl";
+import { SearchInput } from "@/components/SearchInput";
+import { Avatar } from "@/components/Avatar";
+import { Badge } from "@/components/Badge";
+import { ProgressBar } from "@/components/ProgressBar";
+import { SectionHeader } from "@/components/SectionHeader";
 import type { StatusVariant } from "@/lib/status";
 import { TopBarDemo } from "./TopBarDemo";
 
@@ -70,6 +78,45 @@ const DEAL_COLUMNS: Column<DealRow>[] = [
     render: (row) => (
       <StatusChip variant={row.status} label={row.statusLabel} />
     ),
+  },
+];
+
+interface RecruiterRow {
+  name: string;
+  region: string;
+  athletes: number;
+  prospects: number;
+}
+
+const RECRUITER_ROWS: RecruiterRow[] = [
+  { name: "Marcus Webb", region: "Georgia", athletes: 2, prospects: 3 },
+  { name: "Darnell Okafor", region: "Florida", athletes: 1, prospects: 2 },
+  { name: "Jordan Pierce", region: "Georgia / Southeast", athletes: 1, prospects: 2 },
+];
+
+const RECRUITER_COLUMNS: Column<RecruiterRow>[] = [
+  {
+    key: "name",
+    header: "Recruiter",
+    render: (row) => (
+      <div className="flex items-center gap-2.5">
+        <Avatar name={row.name} size="sm" />
+        <span className="font-medium">{row.name}</span>
+      </div>
+    ),
+  },
+  { key: "region", header: "Region", render: (row) => row.region },
+  {
+    key: "athletes",
+    header: "Athletes",
+    align: "right",
+    render: (row) => row.athletes,
+  },
+  {
+    key: "prospects",
+    header: "Prospects",
+    align: "right",
+    render: (row) => row.prospects,
   },
 ];
 
@@ -140,6 +187,56 @@ export default function StyleGuidePage() {
           </div>
         </Section>
 
+        <Section
+          title="Logo"
+          description="Real brand mark — light lockup for white/card surfaces, icon mark for dark surfaces and favicon."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex items-center justify-center rounded-lg border border-card-tint bg-white p-8">
+              <Image
+                src="/brand/tundra-logo-transparent.png"
+                alt="Tundra Sports Group"
+                width={1160}
+                height={297}
+                className="h-10 w-auto"
+              />
+            </div>
+            <div className="flex items-center justify-center gap-4 rounded-lg bg-surface-navy p-8">
+              <Image
+                src="/brand/tundra-icon-mark.png"
+                alt=""
+                width={225}
+                height={225}
+                className="h-12 w-12"
+              />
+              <span className="text-sm font-semibold text-white">
+                Icon mark — sidebar & favicon
+              </span>
+            </div>
+          </div>
+        </Section>
+
+        <Section
+          title="Button"
+          description="Primary, outline, outline-danger and ghost — sm/md sizes."
+        >
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-card-tint bg-white p-4">
+            <Button icon={<Plus className="h-3.5 w-3.5" />}>New Deal</Button>
+            <Button variant="outline" icon={<Upload className="h-3.5 w-3.5" />}>
+              Upload Document
+            </Button>
+            <Button variant="outline-danger" size="sm">
+              Send Reminder
+            </Button>
+            <Button variant="ghost" size="sm">
+              Cancel
+            </Button>
+            <Button disabled size="sm">
+              Disabled
+            </Button>
+          </div>
+        </Section>
+
         <Section title="StatusChip" description="Four semantic states.">
           <div className="flex flex-wrap gap-2 rounded-lg border border-card-tint bg-white p-4">
             {STATUS_VARIANTS.map((variant) => (
@@ -157,6 +254,19 @@ export default function StyleGuidePage() {
                 }
               />
             ))}
+          </div>
+        </Section>
+
+        <Section
+          title="Badge"
+          description="Bordered tag for role/access labels — distinct from status chips."
+        >
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-card-tint bg-white p-4">
+            <Badge label="ADMIN" />
+            <Badge label="BETA" />
+            <div className="rounded-lg bg-surface-navy p-2">
+              <Badge label="ADMIN" tone="dark" />
+            </div>
           </div>
         </Section>
 
@@ -202,6 +312,24 @@ export default function StyleGuidePage() {
         </Section>
 
         <Section
+          title="ProgressBar"
+          description="Label + stat row over a track fill — used for pipeline/region breakdowns."
+        >
+          <div className="space-y-4 rounded-lg border border-card-tint bg-white p-4">
+            <ProgressBar
+              label="Georgia"
+              subtext="6 prospects · 3 athletes"
+              percent={75}
+            />
+            <ProgressBar
+              label="Florida"
+              subtext="4 prospects · 2 athletes"
+              percent={45}
+            />
+          </div>
+        </Section>
+
+        <Section
           title="AlertBanner"
           description="Left accent bar, icon, message, optional action."
         >
@@ -215,12 +343,9 @@ export default function StyleGuidePage() {
                 </>
               }
               action={
-                <button
-                  type="button"
-                  className="rounded-md border border-critical-text px-3 py-1.5 text-xs font-semibold text-critical-text transition-colors hover:bg-critical-bg"
-                >
+                <Button variant="outline-danger" size="sm">
                   Send Reminder
-                </button>
+                </Button>
               }
             />
             <AlertBanner
@@ -245,6 +370,52 @@ export default function StyleGuidePage() {
         </Section>
 
         <Section
+          title="SectionHeader"
+          description="Accent-colored group headers used to break up long lists."
+        >
+          <div className="space-y-4 rounded-lg border border-card-tint bg-white p-4">
+            <SectionHeader
+              label="Overdue — Immediate Action Required"
+              count={2}
+              accent="critical"
+              icon={AlertTriangle}
+              collapsible
+            />
+            <SectionHeader
+              label="Open & In Progress"
+              count={5}
+              accent="neutral"
+              icon={Clock}
+              collapsible
+            />
+          </div>
+        </Section>
+
+        <Section
+          title="SearchInput & Filters"
+          description="Search field plus self-contained pill filters — also used as a view-toggle."
+        >
+          <div className="space-y-4 rounded-lg border border-card-tint bg-white p-4">
+            <SearchInput placeholder="Search prospects..." className="max-w-sm" />
+            <SegmentedControl
+              options={[
+                { value: "all", label: "All" },
+                { value: "critical", label: "Critical" },
+                { value: "high", label: "High" },
+                { value: "medium", label: "Medium" },
+                { value: "low", label: "Low" },
+              ]}
+            />
+            <SegmentedControl
+              options={[
+                { value: "table", label: "Table" },
+                { value: "pipeline", label: "Pipeline" },
+              ]}
+            />
+          </div>
+        </Section>
+
+        <Section
           title="DataTable"
           description="Uppercase headers, right-aligned currency, inline chips."
         >
@@ -253,6 +424,19 @@ export default function StyleGuidePage() {
               columns={DEAL_COLUMNS}
               rows={DEAL_ROWS}
               rowKey={(row) => row.brand}
+            />
+          </div>
+        </Section>
+
+        <Section
+          title="DataTable — with Avatar"
+          description="Row identity via colored initials, deterministic per name."
+        >
+          <div className="rounded-lg border border-card-tint bg-white p-4">
+            <DataTable
+              columns={RECRUITER_COLUMNS}
+              rows={RECRUITER_ROWS}
+              rowKey={(row) => row.name}
             />
           </div>
         </Section>
@@ -303,7 +487,7 @@ export default function StyleGuidePage() {
 
         <Section
           title="NavShell"
-          description="Role-filtered sidebar navigation with active state."
+          description="Role-filtered sidebar navigation with active state and real brand mark."
         >
           <div className="grid gap-4 overflow-hidden rounded-lg border border-card-tint sm:grid-cols-3">
             {(["admin", "recruiter", "athlete"] as const).map((role) => (
