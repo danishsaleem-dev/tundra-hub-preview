@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { Sparkles, Plus, Upload, Clock, AlertTriangle } from "lucide-react";
+import { Sparkles, Plus, Upload, Clock, AlertTriangle, Search } from "lucide-react";
 import { NavShell } from "@/components/NavShell";
 import { KpiCard, type KpiAccent } from "@/components/KpiCard";
 import { AlertBanner } from "@/components/AlertBanner";
@@ -24,8 +24,13 @@ import { SelectField } from "@/components/SelectField";
 import { RadioGroup } from "@/components/RadioGroup";
 import { Checkbox } from "@/components/Checkbox";
 import { FileUpload } from "@/components/FileUpload";
+import { Tabs } from "@/components/Tabs";
+import { Pagination } from "@/components/Pagination";
+import { EmptyState } from "@/components/EmptyState";
 import type { StatusVariant } from "@/lib/status";
 import { TopBarDemo } from "./TopBarDemo";
+import { ModalDemo } from "./ModalDemo";
+import { ToastDemo } from "./ToastDemo";
 
 export const metadata: Metadata = {
   title: "Style Guide — Tundra Sports Hub",
@@ -594,6 +599,71 @@ export default function StyleGuidePage() {
               <Button>Add Athlete</Button>
               <Button variant="outline">Cancel</Button>
             </div>
+          </div>
+        </Section>
+
+        <Section
+          title="Modal"
+          description="Backdrop + centered panel, closes on backdrop click or Escape."
+        >
+          <div className="rounded-lg border border-card-tint bg-white p-4">
+            <ModalDemo />
+          </div>
+        </Section>
+
+        <Section
+          title="Toast"
+          description="Auto-dismissing notification stack, driven by a useToast() hook available anywhere in the app."
+        >
+          <div className="rounded-lg border border-card-tint bg-white p-4">
+            <ToastDemo />
+          </div>
+        </Section>
+
+        <Section
+          title="Tabs"
+          description="Horizontal underline tabs — for detail-page sections rather than sidebar navigation."
+        >
+          <div className="rounded-lg border border-card-tint bg-white p-4">
+            <Tabs
+              items={[
+                { key: "overview", label: "Overview" },
+                { key: "deals", label: "Deals" },
+                { key: "compliance", label: "Compliance" },
+                { key: "documents", label: "Documents" },
+              ]}
+            />
+          </div>
+        </Section>
+
+        <Section
+          title="Pagination"
+          description="Truncates to first/last + a window around the current page once there are more than 7 pages."
+        >
+          <div className="rounded-lg border border-card-tint bg-white p-4">
+            <Pagination
+              pageCount={9}
+              defaultPage={4}
+              totalLabel="Showing 31-40 of 86 athletes"
+            />
+          </div>
+        </Section>
+
+        <Section
+          title="EmptyState"
+          description="No-results pattern for filtered tables and empty lists."
+        >
+          <div className="rounded-lg border border-card-tint bg-white p-4">
+            <EmptyState
+              icon={Search}
+              title="No athletes found"
+              description="Try adjusting your search or filters to find what you're looking for."
+              action={
+                <Button variant="outline" size="sm">
+                  Clear Filters
+                </Button>
+              }
+            />
           </div>
         </Section>
 
