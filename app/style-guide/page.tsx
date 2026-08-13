@@ -18,6 +18,12 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { ListRow } from "@/components/ListRow";
 import { ActivityItem } from "@/components/ActivityItem";
 import { DealRow } from "@/components/DealRow";
+import { TextField } from "@/components/TextField";
+import { TextareaField } from "@/components/TextareaField";
+import { SelectField } from "@/components/SelectField";
+import { RadioGroup } from "@/components/RadioGroup";
+import { Checkbox } from "@/components/Checkbox";
+import { FileUpload } from "@/components/FileUpload";
 import type { StatusVariant } from "@/lib/status";
 import { TopBarDemo } from "./TopBarDemo";
 
@@ -545,6 +551,49 @@ export default function StyleGuidePage() {
                 { value: "pipeline", label: "Pipeline" },
               ]}
             />
+          </div>
+        </Section>
+
+        <Section
+          title="Form Fields"
+          description="TextField, TextareaField, SelectField, RadioGroup, Checkbox, FileUpload — composed here as a sample Add Athlete form."
+        >
+          <div className="grid gap-4 rounded-lg border border-card-tint bg-white p-4 sm:grid-cols-2">
+            <TextField label="Full Name" placeholder="Caleb Fontaine" />
+            <SelectField
+              label="Position"
+              options={[
+                { value: "qb", label: "QB" },
+                { value: "wr", label: "WR" },
+                { value: "rb", label: "RB" },
+                { value: "olb", label: "OLB" },
+                { value: "cb", label: "CB" },
+              ]}
+            />
+            <TextareaField
+              label="Bio"
+              placeholder="Dual-threat QB with 2,800+ passing yards last season."
+              containerClassName="sm:col-span-2"
+            />
+            <RadioGroup
+              label="Eligibility"
+              options={[
+                { value: "eligible", label: "Eligible", description: "Cleared to compete and sign NIL deals" },
+                { value: "pending", label: "Pending Review", description: "Compliance is still verifying eligibility" },
+              ]}
+            />
+            <FileUpload label="Headshot" hint="PNG or JPG up to 5MB" />
+            <div className="sm:col-span-2">
+              <Checkbox
+                label="Notify assigned recruiter"
+                description="Send an email once this athlete is added to the roster"
+                defaultChecked
+              />
+            </div>
+            <div className="flex gap-2 sm:col-span-2">
+              <Button>Add Athlete</Button>
+              <Button variant="outline">Cancel</Button>
+            </div>
           </div>
         </Section>
 

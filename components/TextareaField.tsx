@@ -1,28 +1,31 @@
-import type { InputHTMLAttributes } from "react";
+import type { TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 import { FormLabel } from "@/components/FormLabel";
 
-export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface TextareaFieldProps
+  extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string;
   containerClassName?: string;
 }
 
-export function TextField({
+export function TextareaField({
   label,
   id,
+  rows = 4,
   className,
   containerClassName,
   ...props
-}: TextFieldProps) {
+}: TextareaFieldProps) {
   const inputId = id ?? label.toLowerCase().replace(/\s+/g, "-");
 
   return (
     <div className={cn("space-y-1.5", containerClassName)}>
       <FormLabel htmlFor={inputId}>{label}</FormLabel>
-      <input
+      <textarea
         id={inputId}
+        rows={rows}
         className={cn(
-          "w-full rounded-lg border border-card-tint bg-white px-3 py-2 text-sm text-[#0B1330] placeholder:text-neutral-text focus:border-brand-blue focus:outline-none",
+          "w-full resize-y rounded-lg border border-card-tint bg-white px-3 py-2 text-sm text-[#0B1330] placeholder:text-neutral-text focus:border-brand-blue focus:outline-none",
           className,
         )}
         {...props}
