@@ -306,7 +306,7 @@ export default function StyleGuidePage() {
         </p>
       </header>
 
-      <div className="mx-auto flex max-w-5xl flex-col gap-12 px-8 py-10">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-12 px-8 py-10">
         <Section
           title="Foundations — Colors"
           description="Brand and semantic status tokens sampled from the approved mockup."
