@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { Sparkles, Plus, Upload, Clock, AlertTriangle, Search } from "lucide-react";
+import { Sparkles, Plus, Upload, Clock, AlertTriangle, Search, Trash2 } from "lucide-react";
 import { NavShell } from "@/components/NavShell";
 import { KpiCard, type KpiAccent } from "@/components/KpiCard";
 import { AlertBanner } from "@/components/AlertBanner";
@@ -362,7 +362,7 @@ export default function StyleGuidePage() {
 
         <Section
           title="Button"
-          description="Primary, outline, outline-danger and ghost — sm/md sizes."
+          description="Primary, outline, danger (solid + outline), ghost, and icon-only — sm/md sizes, plus loading and disabled states."
         >
           <div className="flex flex-wrap items-center gap-3 rounded-lg border border-card-tint bg-white p-4">
             <Button icon={<Plus className="h-3.5 w-3.5" />}>New Deal</Button>
@@ -372,8 +372,20 @@ export default function StyleGuidePage() {
             <Button variant="outline-danger" size="sm">
               Send Reminder
             </Button>
+            <Button variant="danger" size="sm" icon={<Trash2 className="h-3.5 w-3.5" />}>
+              Delete Athlete
+            </Button>
             <Button variant="ghost" size="sm">
               Cancel
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Delete row"
+              icon={<Trash2 className="h-4 w-4" />}
+            />
+            <Button size="sm" loading>
+              Saving
             </Button>
             <Button disabled size="sm">
               Disabled
@@ -403,7 +415,7 @@ export default function StyleGuidePage() {
 
         <Section
           title="Badge"
-          description="Bordered tag for role/access labels — distinct from status chips."
+          description="Filled tag for role/access/position labels — muted gray, distinct from StatusChip's semantic pills."
         >
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-card-tint bg-white p-4">
             <Badge label="ADMIN" />

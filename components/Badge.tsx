@@ -10,10 +10,10 @@ export function Badge({ label, tone = "light", className }: BadgeProps) {
   return (
     <span
       className={cn(
-        "rounded border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide",
+        "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-bold tracking-wide",
         tone === "dark"
-          ? "border-white/20 text-slate-300"
-          : "border-card-tint text-neutral-text",
+          ? "border-white/15 bg-white/10 text-white"
+          : "border-card-tint bg-card-tint text-neutral-text",
         className,
       )}
     >
