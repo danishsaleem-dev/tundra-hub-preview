@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 
 export interface PanelProps {
   title?: ReactNode;
+  description?: ReactNode;
   icon?: LucideIcon;
   action?: ReactNode;
   tone?: "default" | "dark";
@@ -13,6 +14,7 @@ export interface PanelProps {
 
 export function Panel({
   title,
+  description,
   icon: Icon,
   action,
   tone = "default",
@@ -32,24 +34,34 @@ export function Panel({
       )}
     >
       {title ? (
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5">
-            {Icon ? (
-              <Icon
+        <div
+          className={cn(
+            "flex items-start justify-between gap-3",
+            description ? "border-b border-card-tint pb-3" : undefined,
+          )}
+        >
+          <div>
+            <div className="flex items-center gap-1.5">
+              {Icon ? (
+                <Icon
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    isDark ? "text-brand-blue" : "text-neutral-text",
+                  )}
+                />
+              ) : null}
+              <h3
                 className={cn(
-                  "h-3.5 w-3.5",
-                  isDark ? "text-brand-blue" : "text-neutral-text",
+                  "text-sm font-bold",
+                  isDark ? "text-white" : "text-[#0B1330]",
                 )}
-              />
+              >
+                {title}
+              </h3>
+            </div>
+            {description ? (
+              <p className="mt-1 text-xs text-neutral-text">{description}</p>
             ) : null}
-            <h3
-              className={cn(
-                "text-sm font-bold",
-                isDark ? "text-white" : "text-[#0B1330]",
-              )}
-            >
-              {title}
-            </h3>
           </div>
           {action}
         </div>
