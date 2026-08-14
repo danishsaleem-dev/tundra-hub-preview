@@ -45,7 +45,7 @@ export function SecurityPanel() {
               className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
             >
               <div>
-                <p className="text-sm font-semibold text-[#0B1330]">
+                <p className="text-sm font-semibold text-surface-navy">
                   {method.title}
                 </p>
                 <p className="mt-0.5 text-xs text-neutral-text">

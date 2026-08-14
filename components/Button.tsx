@@ -13,11 +13,11 @@ export type ButtonSize = "sm" | "md" | "icon";
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary: "bg-brand-blue text-white shadow-sm hover:bg-brand-blue/90",
   outline:
-    "border border-card-tint bg-white text-[#0B1330] hover:bg-page-bg",
+    "border border-card-tint bg-white text-surface-navy hover:bg-page-bg",
   "outline-danger":
     "border border-critical-text text-critical-text hover:bg-critical-bg",
   danger: "bg-critical-text text-white shadow-sm hover:bg-critical-text/90",
-  ghost: "text-[#0B1330] hover:bg-page-bg",
+  ghost: "text-surface-navy hover:bg-page-bg",
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {

@@ -53,7 +53,7 @@ export function Panel({
               <h3
                 className={cn(
                   "text-sm font-bold",
-                  isDark ? "text-white" : "text-[#0B1330]",
+                  isDark ? "text-white" : "text-surface-navy",
                 )}
               >
                 {title}

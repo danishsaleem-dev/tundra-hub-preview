@@ -110,7 +110,7 @@ export function RecruiterDashboardContent() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-bold text-[#0B1330]">
+        <h2 className="text-xl font-bold text-surface-navy">
           Good morning, Marcus
         </h2>
         <p className="mt-1 text-xs text-neutral-text">

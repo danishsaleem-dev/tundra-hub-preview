@@ -72,7 +72,7 @@ export function DealRow({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-semibold text-[#0B1330]">{title}</p>
+            <p className="text-sm font-semibold text-surface-navy">{title}</p>
             {chips.map((chip) => (
               <StatusChip key={chip.label} variant={chip.variant} label={chip.label} />
             ))}
@@ -83,7 +83,7 @@ export function DealRow({
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="text-base font-bold text-[#0B1330]">{amount}</span>
+          <span className="text-base font-bold text-surface-navy">{amount}</span>
           <span className="text-xs">
             <span className="font-medium text-success-text">{paid} paid</span>{" "}
             <span className="text-neutral-text">·</span>{" "}
@@ -111,7 +111,7 @@ export function DealRow({
                   className="flex items-center justify-between gap-3 text-xs"
                 >
                   <dt className="text-neutral-text">{detail.label}</dt>
-                  <dd className="font-medium text-[#0B1330]">{detail.value}</dd>
+                  <dd className="font-medium text-surface-navy">{detail.value}</dd>
                 </div>
               ))}
             </dl>
@@ -125,7 +125,7 @@ export function DealRow({
               {deliverables.map((item) => (
                 <li
                   key={item}
-                  className="flex items-start gap-1.5 text-xs text-[#0B1330]"
+                  className="flex items-start gap-1.5 text-xs text-surface-navy"
                 >
                   <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-brand-blue" />
                   {item}
@@ -163,7 +163,7 @@ export function DealRow({
               <dl className="mt-2 space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <dt className="text-neutral-text">Total</dt>
-                  <dd className="font-semibold text-[#0B1330]">
+                  <dd className="font-semibold text-surface-navy">
                     {paymentSummary.total}
                   </dd>
                 </div>

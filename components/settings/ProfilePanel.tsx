@@ -14,7 +14,7 @@ export function ProfilePanel() {
           <div className="flex items-center gap-3">
             <Avatar name="Tundra Admin" size="lg" />
             <div>
-              <p className="text-sm font-bold text-[#0B1330]">Tundra Admin</p>
+              <p className="text-sm font-bold text-surface-navy">Tundra Admin</p>
               <p className="text-xs text-neutral-text">
                 Admin · Tundra Sports Group
               </p>

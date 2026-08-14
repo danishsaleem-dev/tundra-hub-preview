@@ -117,13 +117,13 @@ export function AthleteDashboardContent() {
               <li key={deal.brand} className="py-2.5 first:pt-0 last:pb-0">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-[#0B1330]">
+                    <p className="text-sm font-semibold text-surface-navy">
                       {deal.brand}
                     </p>
                     <p className="text-xs text-neutral-text">{deal.ends}</p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="text-sm font-semibold text-[#0B1330]">
+                    <span className="text-sm font-semibold text-surface-navy">
                       {deal.amount}
                     </span>
                     <StatusChip

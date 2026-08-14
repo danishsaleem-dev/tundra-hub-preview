@@ -67,7 +67,7 @@ export function TeamPanel() {
             <div className="flex items-center gap-2.5">
               <Avatar name={member.name} />
               <div>
-                <p className="text-sm font-semibold text-[#0B1330]">
+                <p className="text-sm font-semibold text-surface-navy">
                   {member.name}
                 </p>
                 <p className="text-xs text-neutral-text">{member.email}</p>

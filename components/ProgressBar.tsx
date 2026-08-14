@@ -18,7 +18,7 @@ export function ProgressBar({
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-sm font-semibold text-[#0B1330]">{label}</span>
+        <span className="text-sm font-semibold text-surface-navy">{label}</span>
         {subtext ? (
           <span className="text-xs text-neutral-text">{subtext}</span>
         ) : null}

@@ -22,7 +22,7 @@ export function TextField({
       <input
         id={inputId}
         className={cn(
-          "w-full rounded-lg border border-card-tint bg-white px-3 py-2 text-sm text-[#0B1330] placeholder:text-neutral-text focus:border-brand-blue focus:outline-none",
+          "w-full rounded-lg border border-card-tint bg-white px-3 py-2 text-sm text-surface-navy placeholder:text-neutral-text focus:border-brand-blue focus:outline-none",
           className,
         )}
         {...props}

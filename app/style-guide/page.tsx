@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Image from "next/image";
+import { cn } from "@/lib/cn";
 import { Sparkles, Plus, Upload, Clock, AlertTriangle, Search, Trash2 } from "lucide-react";
 import { NavShell } from "@/components/NavShell";
 import { KpiCard, type KpiAccent } from "@/components/KpiCard";
@@ -224,7 +225,7 @@ const ATHLETE_COLUMNS: Column<AthleteRow>[] = [
       <div className="flex items-center gap-2.5">
         <Avatar name={row.name} size="sm" />
         <div className="leading-tight">
-          <p className="font-medium text-[#0B1330]">{row.name}</p>
+          <p className="font-medium text-surface-navy">{row.name}</p>
           <p className="text-xs text-neutral-text">{row.location}</p>
         </div>
       </div>
@@ -276,7 +277,7 @@ function Section({
   return (
     <section className="space-y-3">
       <div>
-        <h2 className="text-base font-bold text-[#0B1330]">{title}</h2>
+        <h2 className="text-base font-bold text-surface-navy">{title}</h2>
         {description ? (
           <p className="mt-0.5 text-sm text-neutral-text">{description}</p>
         ) : null}
@@ -286,16 +287,18 @@ function Section({
   );
 }
 
-function Swatch({ name, hex }: { name: string; hex: string }) {
+function Swatch({ name, bgClassName }: { name: string; bgClassName: string }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-card-tint bg-white p-3">
       <span
-        className="h-9 w-9 shrink-0 rounded-md border border-black/5"
-        style={{ backgroundColor: hex }}
+        className={cn(
+          "h-9 w-9 shrink-0 rounded-md border border-black/5",
+          bgClassName,
+        )}
       />
       <div className="leading-tight">
-        <p className="text-sm font-semibold text-[#0B1330]">{name}</p>
-        <p className="text-xs text-neutral-text">{hex}</p>
+        <p className="text-sm font-semibold text-surface-navy">{name}</p>
+        <p className="text-xs text-neutral-text">--color-{name}</p>
       </div>
     </div>
   );
@@ -308,7 +311,7 @@ export default function StyleGuidePage() {
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue">
           Component Library
         </p>
-        <h1 className="mt-1 text-2xl font-bold text-[#0B1330]">
+        <h1 className="mt-1 text-2xl font-bold text-surface-navy">
           Tundra Sports Hub — Style Guide
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-neutral-text">
@@ -323,11 +326,11 @@ export default function StyleGuidePage() {
           description="Brand and semantic status tokens sampled from the approved mockup."
         >
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Swatch name="brand-blue" hex="#0877E3" />
-            <Swatch name="surface-navy" hex="#06133A" />
-            <Swatch name="surface-navy-deep" hex="#071542" />
-            <Swatch name="page-bg" hex="#F0F2FF" />
-            <Swatch name="card-tint" hex="#ECEEFB" />
+            <Swatch name="brand-blue" bgClassName="bg-brand-blue" />
+            <Swatch name="surface-navy" bgClassName="bg-surface-navy" />
+            <Swatch name="surface-navy-deep" bgClassName="bg-surface-navy-deep" />
+            <Swatch name="page-bg" bgClassName="bg-page-bg" />
+            <Swatch name="card-tint" bgClassName="bg-card-tint" />
           </div>
         </Section>
 
@@ -712,7 +715,7 @@ export default function StyleGuidePage() {
           <div className="rounded-xl border border-card-tint bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="text-lg font-bold text-[#0B1330]">Athletes</h3>
+                <h3 className="text-lg font-bold text-surface-navy">Athletes</h3>
                 <p className="text-xs text-neutral-text">
                   {ATHLETES.length} athletes in roster
                 </p>

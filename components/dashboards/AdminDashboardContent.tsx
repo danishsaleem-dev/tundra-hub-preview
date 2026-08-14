@@ -338,7 +338,7 @@ export function AdminDashboardContent() {
                 meta={payment.brand}
                 trailing={
                   <>
-                    <span className="text-sm font-semibold text-[#0B1330]">
+                    <span className="text-sm font-semibold text-surface-navy">
                       {payment.amount}
                     </span>
                     <StatusChip

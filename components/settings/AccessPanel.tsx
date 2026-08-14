@@ -20,7 +20,7 @@ export function AccessPanel() {
         description="Your current role and permissions in the system"
       >
         <div className="rounded-lg bg-card-tint p-4">
-          <p className="text-sm font-bold text-[#0B1330]">Owner / Admin</p>
+          <p className="text-sm font-bold text-surface-navy">Owner / Admin</p>
           <p className="mt-1 text-xs text-neutral-text">
             Full access to all modules, data, and settings. Can manage users,
             view financials, and access System QA.
@@ -34,7 +34,7 @@ export function AccessPanel() {
           {PERMISSIONS.map((permission) => (
             <li
               key={permission}
-              className="flex items-center gap-2 text-sm text-[#0B1330]"
+              className="flex items-center gap-2 text-sm text-surface-navy"
             >
               <Check className="h-3.5 w-3.5 shrink-0 text-success-text" />
               {permission}

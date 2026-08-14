@@ -45,7 +45,7 @@ export function Tabs({
               "-mb-px border-b-2 pb-2.5 text-sm font-semibold transition-colors",
               isActive
                 ? "border-brand-blue text-brand-blue"
-                : "border-transparent text-neutral-text hover:text-[#0B1330]",
+                : "border-transparent text-neutral-text hover:text-surface-navy",
             )}
           >
             {item.label}

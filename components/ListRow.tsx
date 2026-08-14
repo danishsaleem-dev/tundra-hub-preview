@@ -48,7 +48,7 @@ export function ListRow({
         />
       ) : null}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-[#0B1330]">
+        <p className="truncate text-sm font-semibold text-surface-navy">
           {title}
         </p>
         {meta ? (

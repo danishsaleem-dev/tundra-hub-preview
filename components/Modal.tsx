@@ -42,7 +42,7 @@ export function Modal({
         type="button"
         aria-label="Close modal"
         onClick={onClose}
-        className="fixed inset-0 bg-[#06133A]/50"
+        className="fixed inset-0 bg-surface-navy/50"
       />
       <div
         className={cn(
@@ -52,7 +52,7 @@ export function Modal({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-[#0B1330]">{title}</h2>
+            <h2 className="text-base font-bold text-surface-navy">{title}</h2>
             {description ? (
               <p className="mt-1 text-xs text-neutral-text">{description}</p>
             ) : null}
@@ -61,7 +61,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="shrink-0 rounded-md p-1 text-neutral-text transition-colors hover:bg-page-bg hover:text-[#0B1330]"
+            className="shrink-0 rounded-md p-1 text-neutral-text transition-colors hover:bg-page-bg hover:text-surface-navy"
           >
             <X className="h-4 w-4" />
           </button>

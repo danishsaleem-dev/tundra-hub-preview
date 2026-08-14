@@ -42,7 +42,7 @@ export function SettingsShell() {
   return (
     <div>
       <div>
-        <h1 className="text-2xl font-bold text-[#0B1330]">Settings</h1>
+        <h1 className="text-2xl font-bold text-surface-navy">Settings</h1>
         <p className="mt-1 text-sm text-neutral-text">
           Manage your account and preferences
         </p>

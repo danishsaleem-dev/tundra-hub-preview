@@ -51,7 +51,7 @@ export function Checkbox({
         ) : null}
       </span>
       <span>
-        <span className="block text-sm font-medium text-[#0B1330]">
+        <span className="block text-sm font-medium text-surface-navy">
           {label}
         </span>
         {description ? (

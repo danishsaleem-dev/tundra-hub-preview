@@ -57,7 +57,7 @@ export function FileUpload({
         )}
       >
         <Upload className="h-5 w-5 text-neutral-text" />
-        <p className="text-sm font-medium text-[#0B1330]">
+        <p className="text-sm font-medium text-surface-navy">
           Click to upload{" "}
           <span className="font-normal text-neutral-text">
             or drag and drop
@@ -82,7 +82,7 @@ export function FileUpload({
             >
               <span className="flex min-w-0 items-center gap-2">
                 <FileIcon className="h-4 w-4 shrink-0 text-neutral-text" />
-                <span className="truncate text-[#0B1330]">{file.name}</span>
+                <span className="truncate text-surface-navy">{file.name}</span>
               </span>
               <button
                 type="button"

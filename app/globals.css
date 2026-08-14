@@ -40,5 +40,5 @@
 
 body {
   background: var(--color-page-bg);
-  color: #14163a;
+  color: var(--color-surface-navy);
 }

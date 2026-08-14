@@ -3,8 +3,7 @@ import { cn } from "@/lib/cn";
 const PALETTE = [
   "bg-brand-blue",
   "bg-surface-navy",
-  "bg-[#3B4B9C]",
-  "bg-[#5B7FDB]",
+  "bg-surface-navy-deep",
   "bg-neutral-text",
 ];
 

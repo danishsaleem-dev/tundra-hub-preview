@@ -49,13 +49,13 @@ export function Toast({ variant, message, onClose, className }: ToastProps) {
       )}
     >
       <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", styles.icon_color)} />
-      <p className="flex-1 text-sm leading-snug text-[#0B1330]">{message}</p>
+      <p className="flex-1 text-sm leading-snug text-surface-navy">{message}</p>
       {onClose ? (
         <button
           type="button"
           onClick={onClose}
           aria-label="Dismiss"
-          className="shrink-0 text-neutral-text transition-colors hover:text-[#0B1330]"
+          className="shrink-0 text-neutral-text transition-colors hover:text-surface-navy"
         >
           <X className="h-3.5 w-3.5" />
         </button>

@@ -50,7 +50,7 @@ export function SelectField({
           type="button"
           onClick={() => setOpen((v) => !v)}
           className={cn(
-            "flex w-full items-center justify-between gap-2 rounded-lg border border-card-tint bg-white px-3 py-2 text-left text-sm text-[#0B1330] transition-colors hover:border-brand-blue/40 focus:border-brand-blue focus:outline-none",
+            "flex w-full items-center justify-between gap-2 rounded-lg border border-card-tint bg-white px-3 py-2 text-left text-sm text-surface-navy transition-colors hover:border-brand-blue/40 focus:border-brand-blue focus:outline-none",
             open && "border-brand-blue",
             className,
           )}
@@ -87,7 +87,7 @@ export function SelectField({
                       "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-page-bg",
                       isActive
                         ? "font-semibold text-brand-blue"
-                        : "text-[#0B1330]",
+                        : "text-surface-navy",
                     )}
                   >
                     {option.label}

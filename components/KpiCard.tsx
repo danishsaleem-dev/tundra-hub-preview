@@ -12,11 +12,11 @@ const ACCENT_BORDER: Record<KpiAccent, string> = {
 };
 
 const ACCENT_VALUE: Record<KpiAccent, string> = {
-  brand: "text-[#0B1330]",
+  brand: "text-surface-navy",
   success: "text-success-text",
   warning: "text-warning-text",
   critical: "text-critical-text",
-  neutral: "text-[#0B1330]",
+  neutral: "text-surface-navy",
 };
 
 export interface KpiCardProps {

@@ -83,7 +83,7 @@ export function TableCell({
 }) {
   return (
     <td
-      className={cn("py-3 text-[#0B1330]", ALIGN_CLASS[align], className)}
+      className={cn("py-3 text-surface-navy", ALIGN_CLASS[align], className)}
     >
       {children}
     </td>

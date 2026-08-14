@@ -9,7 +9,7 @@ export function FormLabel({ htmlFor, children }: FormLabelProps) {
   return (
     <label
       htmlFor={htmlFor}
-      className="block text-sm font-semibold text-[#0B1330]"
+      className="block text-sm font-semibold text-surface-navy"
     >
       {children}
     </label>

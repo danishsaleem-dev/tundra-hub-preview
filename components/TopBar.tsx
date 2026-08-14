@@ -22,14 +22,14 @@ export function TopBar({
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-card-tint bg-white px-8">
-      <h1 className="text-lg font-bold text-[#0B1330]">{title}</h1>
+      <h1 className="text-lg font-bold text-surface-navy">{title}</h1>
 
       <div className="flex items-center gap-3">
         <div className="relative">
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="flex items-center gap-2 rounded-full border border-card-tint px-3 py-1.5 text-sm font-medium text-[#0B1330] transition-colors hover:bg-page-bg"
+            className="flex items-center gap-2 rounded-full border border-card-tint px-3 py-1.5 text-sm font-medium text-surface-navy transition-colors hover:bg-page-bg"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />
             {ROLE_LABEL[role]}
@@ -57,7 +57,7 @@ export function TopBar({
                       "flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-page-bg",
                       option === role
                         ? "font-semibold text-brand-blue"
-                        : "text-[#0B1330]",
+                        : "text-surface-navy",
                     )}
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />

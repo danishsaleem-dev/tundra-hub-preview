@@ -29,7 +29,7 @@ export default function NotFound() {
       <Panel>
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <Construction className="h-8 w-8 text-neutral-text" />
-          <p className="text-lg font-bold text-[#0B1330]">
+          <p className="text-lg font-bold text-surface-navy">
             Not built in this preview
           </p>
           <p className="max-w-sm text-sm text-neutral-text">

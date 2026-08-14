@@ -39,7 +39,7 @@ export function RadioGroup({
   return (
     <div className={cn("space-y-2", className)}>
       {label ? (
-        <p className="text-sm font-semibold text-[#0B1330]">{label}</p>
+        <p className="text-sm font-semibold text-surface-navy">{label}</p>
       ) : null}
       <div className="space-y-2">
         {options.map((option) => {
@@ -70,7 +70,7 @@ export function RadioGroup({
                 ) : null}
               </span>
               <span>
-                <span className="block text-sm font-medium text-[#0B1330]">
+                <span className="block text-sm font-medium text-surface-navy">
                   {option.label}
                 </span>
                 {option.description ? (
