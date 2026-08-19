@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { fontSans } from "@/lib/fonts";
 import { ToastProvider } from "@/components/ToastProvider";
 import "./globals.css";
@@ -10,10 +11,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${fontSans.variable} h-full antialiased`}>
-      <body className="min-h-full font-sans">
-        <ToastProvider>{children}</ToastProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={`${fontSans.variable} h-full antialiased`}>
+        <body className="min-h-full font-sans">
+          <ToastProvider>{children}</ToastProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

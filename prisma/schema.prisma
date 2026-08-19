@@ -1,0 +1,468 @@
+// Tundra Sports Hub — Phase 1 Postgres Schema
+// Derived from the TUNDRA AGENCY OS Airtable schema audit
+// Consolidations and design decisions are documented in the companion ERD document
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ── Enums ──────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  RECRUITER
+  ATHLETE
+}
+
+enum Position {
+  QB
+  WR
+  RB
+  TE
+  OL
+  DL
+  LB
+  DB
+  K_P
+}
+
+enum DominantHand {
+  RIGHT
+  LEFT
+  AMBIDEXTROUS
+}
+
+enum SchoolType {
+  HIGH_SCHOOL
+  COLLEGE
+  JUNIOR_COLLEGE
+  PREP_SCHOOL
+  PRO
+}
+
+enum AcademicYear {
+  FRESHMAN
+  SOPHOMORE
+  JUNIOR
+  SENIOR
+  GRADUATE
+  POSTGRADUATE
+  NOT_APPLICABLE
+}
+
+enum TransferPortalStatus {
+  NOT_APPLICABLE
+  NOT_IN_PORTAL
+  CONSIDERING
+  IN_PORTAL
+  TRANSFERRED
+}
+
+enum RecruitingStatus {
+  UNCOMMITTED
+  COMMITTED
+  ACTIVELY_RECRUITED
+  LIGHT_INTEREST
+  SIGNED
+  PORTAL
+  PRO
+}
+
+enum Tier {
+  TIER_A
+  TIER_B
+  TIER_C
+}
+
+enum AthleteFocus {
+  NIL
+  FOOTBALL
+  BOTH
+}
+
+enum ContactMethod {
+  TEXT
+  CALL
+  EMAIL
+}
+
+enum ProspectStatus {
+  NEW_LEAD
+  FILM_REVIEW
+  INTRO_CALL_SCHEDULED
+  FAMILY_CALL_SCHEDULED
+  EVALUATING
+  OFFER_EXTENDED
+  AGREEMENT_SENT
+  SIGNED
+  LOST
+  NURTURE
+}
+
+enum RepresentationStatus {
+  NONE
+  PARENT_LED
+  ADVISOR
+  MARKETING_REP
+  AGENT
+  ATTORNEY
+  COLLECTIVE_CONNECTED
+  UNKNOWN
+}
+
+enum DealType {
+  NIL_DEAL
+  APPEARANCE
+  AUTOGRAPH_SIGNING
+  CAMP_CLINIC
+  BRAND_AMBASSADOR
+  SOCIAL_MEDIA_CAMPAIGN
+  COMMERCIAL
+  EVENT_PARTNERSHIP
+  PRODUCT_GIFTING
+  CONTENT_COLLABORATION
+  SPEAKING_PANEL
+  OTHER
+}
+
+enum ContractStatus {
+  DRAFTING
+  SENT
+  SIGNED
+  COMPLETED
+}
+
+enum DisclosureStatus {
+  REQUIRED
+  SUBMITTED
+  NOT_REQUIRED
+}
+
+enum PaymentStructure {
+  LUMP_SUM
+  INSTALLMENTS
+}
+
+enum RecruiterStatus {
+  ACTIVE
+  VETTING
+  PAUSED
+  INACTIVE
+}
+
+enum AgreementStatus {
+  YES
+  NO
+  PENDING
+}
+
+enum QualityScore {
+  A
+  B
+  C
+}
+
+enum IntroductionSource {
+  DIRECT
+  REFERRED_BY_ATHLETE
+  REFERRED_BY_RECRUITER
+  OTHER
+}
+
+// Consolidated from three overlapping status vocabularies found in the
+// Airtable audit (Payments.Status, Payments.Payment Status, NIL Deals.Payment
+// Status Summary). "Overdue" is intentionally NOT a value here — it's a
+// computed, time-based property (see Payment model notes below), because a
+// payment can be Partial AND overdue at the same time; cramming both into one
+// enum loses that combination.
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+}
+
+// ── Identity & Access ─────────────────────────────────
+
+model User {
+  id          String     @id @default(uuid())
+  clerkUserId String     @unique
+  role        UserRole
+  email       String     @unique
+  createdAt   DateTime   @default(now())
+
+  // Exactly one of these is set, matching the user's role — enforced two ways:
+  //   1. Database CHECK constraint (the actual guarantee — see migration
+  //      note below), so a bad row cannot be written even if application
+  //      code has a bug.
+  //   2. Service-layer validation at invite/creation time, purely for a
+  //      clear error message before the DB would reject it.
+  //
+  // Constraint added via raw SQL in the initial migration (Prisma's schema
+  // language doesn't express cross-field conditional constraints directly):
+  //
+  //   ALTER TABLE "User" ADD CONSTRAINT role_link_consistency CHECK (
+  //     (role = 'ADMIN'     AND "athleteId" IS NULL     AND "recruiterId" IS NULL) OR
+  //     (role = 'RECRUITER' AND "recruiterId" IS NOT NULL AND "athleteId" IS NULL) OR
+  //     (role = 'ATHLETE'   AND "athleteId" IS NOT NULL AND "recruiterId" IS NULL)
+  //   );
+  athleteId   String?    @unique
+  athlete     Athlete?   @relation(fields: [athleteId], references: [id])
+  recruiterId String?    @unique
+  recruiter   Recruiter? @relation(fields: [recruiterId], references: [id])
+}
+
+// ── Core Modules ───────────────────────────────────────
+
+model Recruiter {
+  id                 String              @id @default(uuid())
+  name               String
+  phone              String?
+  email              String?
+  territory          String?
+  stateFocus         String?
+  status             RecruiterStatus     @default(VETTING)
+  agreementSigned    AgreementStatus     @default(PENDING)
+  startDate          DateTime?
+  paymentTerms       String?
+  leadsSubmitted     Int                 @default(0)
+  athletesSigned     Int                 @default(0)
+  revenueInfluenced  Decimal?            @db.Decimal(12, 2)
+  qualityScore       QualityScore?
+  introductionSource IntroductionSource?
+  notes              String?
+  archived           Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  prospects          Prospect[]
+  athletes           Athlete[]
+  user               User?
+}
+
+model Athlete {
+  id                     String    @id @default(uuid())
+  athleteName            String
+  preferredName          String?
+
+  email                  String?
+  phone                  String?
+  city                   String?
+  state                  String?
+  zip                    String?
+
+  position               Position?
+  secondaryPositions     Position[]
+  height                 String?
+  weight                 Int?
+  dominantHand           DominantHand?
+  jerseyNumber           Int?
+  teamName               String?
+
+  schoolType              SchoolType?
+  school                  String?
+  conference               String?
+  currentAcademicYear      AcademicYear?
+  eligibilityRemaining     String?
+  major                    String?
+  gpa                      Decimal?  @db.Decimal(3, 2)
+  graduationYear           Int?
+
+  transferPortalStatus     TransferPortalStatus?
+  currentRecruitingStatus  RecruitingStatus?
+  tier                     Tier?
+  focus                    AthleteFocus?
+  signedDate               DateTime?
+
+  recruiterId              String?
+  recruiter                Recruiter? @relation(fields: [recruiterId], references: [id])
+
+  // Consolidated free-text groupings (see ERD doc for what each bundles)
+  recruitingProfile        Json?    // film links, offers, goals, measurables, awards
+  socialProfiles           Json?    // instagram/twitter/tiktok/youtube/snapchat + follower counts
+  nilPreferences           Json?    // content comfort, preferred/restricted categories
+
+  // Parent/guardian contact — deliberately NOT in the admin-only sensitive
+  // table below. This is part of the native "New Athletes" basic intake form
+  // (Jeffrey's own 14-field definition), meaning the athlete is expected to
+  // self-report and edit this during profile completion. Still personal
+  // data, but not gated the way DOB/address/government ID are, because the
+  // athlete is the source of it, not the admin.
+  parentGuardianName        String?
+  parentPhone                String?
+
+  // Parent consent tracking — present in the Airtable audit, initially
+  // dropped without being called out. Re-added: consent status for a minor
+  // is a compliance signal that shouldn't sit untracked anywhere in Phase 1.
+  // Lightweight by design — full consent workflow/documents stay Phase 2.
+  //
+  // parentConsentRequired is manually set by an admin, not computed from
+  // date of birth. Two reasons: DOB lives in AthleteSensitiveInfo and is
+  // optional, so it won't always be available to compute from; and consent
+  // requirements can depend on state-specific rules beyond just age, which
+  // isn't something to silently encode as a formula. The API layer can
+  // surface a suggested default when DOB indicates a minor, but the admin
+  // sets the actual value.
+  parentConsentRequired      Boolean?  @default(false)
+  parentConsentReceivedAt    DateTime?
+  parentConsentRecordedBy    String?   // User.id of the admin who set this status — same accountability pattern as the access log
+
+  preferredContactMethod   ContactMethod?
+  communicationNotes       String?
+  lastCheckIn              DateTime?
+  nextCheckIn              DateTime?
+
+  intakeStatus             String?
+  profileComplete          Boolean  @default(false)  // athlete self-service flag
+  archived                 Boolean  @default(false)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  sensitiveInfo      AthleteSensitiveInfo?
+  emergencyContacts  EmergencyContact[]
+  nilDeals           NilDeal[]
+  user               User?
+
+  // NOTE: no compliance-status field — deliberately excluded, matching the
+  // agreed "no compliance field of any kind in Phase 1" scope, even though
+  // the source Airtable Athletes table has one.
+}
+
+// Structurally separated from Athlete, not just documented as admin-only.
+// Non-admin query paths (recruiter-scoped, athlete-self-scoped) never join
+// this relation, so the data is architecturally absent from their results —
+// not filtered out after the fact, never fetched in the first place. This is
+// the hard guarantee, not a convention every query has to remember to follow.
+model AthleteSensitiveInfo {
+  id              String    @id @default(uuid())
+  athleteId       String    @unique
+  athlete         Athlete   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  dateOfBirth     DateTime?
+  homeAddress     String?
+  governmentIdUrl String?   // reference to an encrypted Vercel Blob object, not the file itself
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// Every read of AthleteSensitiveInfo — specifically governmentIdUrl, since
+// that's what triggers actual document retrieval — is written here by the
+// API layer before the file is served. Not optional; not something a route
+// can forget to call.
+model AthleteSensitiveInfoAccessLog {
+  id          String   @id @default(uuid())
+  athleteId   String
+  accessedBy  String   // User.id of the admin who accessed it
+  action      String   // e.g. "VIEW_GOVERNMENT_ID", "VIEW_DOB", "VIEW_ADDRESS"
+  accessedAt  DateTime @default(now())
+}
+
+model EmergencyContact {
+  id           String  @id @default(uuid())
+  athleteId    String
+  athlete      Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  name         String
+  relationship String?
+  phone        String?
+  email        String?
+  isPrimary    Boolean @default(false)
+}
+
+model Prospect {
+  id                        String                 @id @default(uuid())
+  fullName                  String
+  email                     String?
+  phone                     String?
+  position                  Position?
+  school                    String?
+  classYear                 String?
+  state                     String?
+  parentGuardianName        String?
+  parentPhone               String?
+  filmLink                  String?
+  socialLinks               Json?
+
+  recruiterId               String?
+  recruiter                 Recruiter?             @relation(fields: [recruiterId], references: [id])
+
+  status                    ProspectStatus         @default(NEW_LEAD)
+  priorityTier              Tier?
+  lastContactDate           DateTime?
+  nextActionDate            DateTime?
+  nextStep                  String?
+  knownRepresentationStatus RepresentationStatus?
+
+  scoutingNotes             String?   // referral reason, strengths, development areas
+  evaluationNotes           String?   // market fit, urgency, brand-fit observations
+
+  archived                  Boolean                @default(false)
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
+}
+
+model NilDeal {
+  id               String            @id @default(uuid())
+  dealName         String
+  athleteId        String
+  athlete          Athlete           @relation(fields: [athleteId], references: [id])
+
+  // Kept as plain text for Phase 1 — Brands isn't in the required core
+  // module list; promote to a full relational table in a later phase if
+  // brand-relationship management becomes its own module.
+  brandName        String?
+
+  dealType         DealType?
+  dealValue        Decimal?          @db.Decimal(12, 2)
+  agencyFee        Decimal?          @db.Decimal(12, 2)
+  athleteNet       Decimal?          @db.Decimal(12, 2)
+  deliverables     String?
+  contractStatus   ContractStatus    @default(DRAFTING)
+  schoolDisclosure DisclosureStatus?
+  ftcGuidanceSent  Boolean           @default(false)
+  paymentStructure PaymentStructure?
+  deadline         DateTime?
+  notes            String?
+  archived         Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  payments         Payment[]
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  paymentName     String
+  nilDealId       String
+  nilDeal         NilDeal       @relation(fields: [nilDealId], references: [id])
+
+  paymentAmount   Decimal       @db.Decimal(12, 2)
+  amountPaid      Decimal       @default(0) @db.Decimal(12, 2)
+  dueDate         DateTime?
+  paymentDate     DateTime?
+  status          PaymentStatus @default(PENDING)
+
+  invoiceSent     Boolean       @default(false)
+  invoiceId       String?
+  invoiceSentDate DateTime?
+  paymentLink     String?
+  notes           String?
+  archived        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Computed at the API layer, NOT stored columns — matches how Airtable
+  // itself treats these as formula fields, just implemented here instead:
+  //   amountOutstanding    = paymentAmount - amountPaid
+  //   isOverdue            = status != PAID && dueDate < now()
+  //   collectionRequired   = status != PAID && invoiceSent == true
+  //   daysSinceInvoiceSent = daysBetween(invoiceSentDate, now())
+}
+
+// ── Deferred to Phase 2 — not modeled here ─────────────
+// Compliance, Tasks, Brands (as own table), Football Opportunities, System QA
