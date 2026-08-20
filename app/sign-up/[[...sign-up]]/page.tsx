@@ -55,7 +55,22 @@ export default function SignUpPage() {
         },
       });
     } else {
-      setSubmitError("Sign-up could not be completed. Your invitation may have expired.");
+      // Don't guess at why — surface what Clerk actually reports so this is
+      // debuggable from the error message alone instead of DevTools.
+      console.error("Ticket sign-up did not complete", {
+        status: signUp.status,
+        missingFields: signUp.missingFields,
+        unverifiedFields: signUp.unverifiedFields,
+        requiredFields: signUp.requiredFields,
+      });
+      const details = [
+        `status: ${signUp.status}`,
+        signUp.missingFields?.length ? `missing: ${signUp.missingFields.join(", ")}` : null,
+        signUp.unverifiedFields?.length ? `unverified: ${signUp.unverifiedFields.join(", ")}` : null,
+      ]
+        .filter(Boolean)
+        .join(" — ");
+      setSubmitError(`Sign-up could not be completed (${details}).`);
     }
   }
 
