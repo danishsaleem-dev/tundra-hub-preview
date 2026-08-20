@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/current-user";
-import { revokeRecordInvite, InviteError, type InvitableRole } from "@/lib/invites";
+import { revokeRecordInvite, describeInviteApiError, InviteError, type InvitableRole } from "@/lib/invites";
 
 export async function POST(request: Request) {
   const admin = await requireAdmin();
@@ -31,9 +31,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
     console.error("POST /api/admin/invites/revoke failed", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : String(err) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: describeInviteApiError(err) }, { status: 500 });
   }
 }

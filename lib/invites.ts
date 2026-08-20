@@ -32,6 +32,26 @@ export interface InviteMetadata {
   recordId: string | null;
 }
 
+// Clerk's SDK errors carry the real validation reason in `.errors[]`
+// (e.g. "That email address is taken."), not in `.message`, which is just
+// the generic HTTP status text ("Unprocessable Entity"). Duck-typed rather
+// than importing @clerk/backend's isClerkAPIResponseError to avoid adding
+// a direct dependency on a package we already get transitively.
+export function describeInviteApiError(err: unknown): string {
+  if (
+    err &&
+    typeof err === "object" &&
+    "errors" in err &&
+    Array.isArray((err as { errors: unknown }).errors)
+  ) {
+    const messages = (err as { errors: { longMessage?: string; message?: string }[] }).errors
+      .map((e) => e.longMessage ?? e.message)
+      .filter(Boolean);
+    if (messages.length) return messages.join("; ");
+  }
+  return err instanceof Error ? err.message : String(err);
+}
+
 export class InviteError extends Error {
   constructor(
     message: string,

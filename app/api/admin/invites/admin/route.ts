@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/current-user";
-import { createAdminInvite } from "@/lib/invites";
+import { createAdminInvite, describeInviteApiError } from "@/lib/invites";
 
 // Separate, simpler path from the record-linked invites: an admin invite
 // has no Athlete/Recruiter to check status on or update — role_link_consistency
@@ -26,9 +26,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ invitation });
   } catch (err) {
     console.error("POST /api/admin/invites/admin failed", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : String(err) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: describeInviteApiError(err) }, { status: 500 });
   }
 }
