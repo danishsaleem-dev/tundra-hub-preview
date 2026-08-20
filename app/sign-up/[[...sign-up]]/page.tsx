@@ -24,6 +24,7 @@ export default function SignUpPage() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [password, setPassword] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,6 +42,23 @@ export default function SignUpPage() {
     if (error) {
       setSubmitError(error.message ?? "Something went wrong completing your invitation.");
       return;
+    }
+
+    // This instance requires a password (confirmed via a real
+    // missing_requirements response) — the ticket call alone verifies the
+    // invited email but doesn't carry a password field, so a second call is
+    // needed to supply it against the same in-progress sign-up.
+    if (signUp.status !== "complete" && signUp.missingFields?.includes("password")) {
+      const emailAddress = signUp.emailAddress;
+      if (!emailAddress) {
+        setSubmitError("Could not read the invited email address from the invitation.");
+        return;
+      }
+      const { error: passwordError } = await signUp.password({ password, emailAddress });
+      if (passwordError) {
+        setSubmitError(passwordError.message ?? "Something went wrong setting your password.");
+        return;
+      }
     }
 
     if (signUp.status === "complete") {
@@ -125,6 +143,15 @@ export default function SignUpPage() {
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             autoComplete="family-name"
+            required
+          />
+          <TextField
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            minLength={8}
             required
           />
 
