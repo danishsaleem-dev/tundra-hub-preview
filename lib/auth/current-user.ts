@@ -1,8 +1,9 @@
 import "server-only";
 import { cache } from "react";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { RoleUser } from "@/lib/roles";
 
 export interface CurrentUser {
   id: string;
@@ -38,3 +39,27 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     },
   });
 });
+
+// Shapes the resolved identity for display (NavShell's user footer, etc.).
+// Postgres doesn't store a name -- that lives on the Clerk account -- so this
+// combines both sources. Separate from getCurrentUser() so pages that only
+// need role/id/email for logic don't pay for a Clerk profile fetch too.
+export const getCurrentDisplayUser = cache(
+  async (): Promise<RoleUser | null> => {
+    const user = await getCurrentUser();
+    if (!user) return null;
+
+    const clerkUser = await currentUser();
+    const firstName = clerkUser?.firstName ?? "";
+    const lastName = clerkUser?.lastName ?? "";
+    const fullName = `${firstName} ${lastName}`.trim();
+    const name = fullName || user.email;
+    const initials = fullName
+      ? `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+      : user.email.slice(0, 2).toUpperCase();
+    const subtitle =
+      user.role.charAt(0) + user.role.slice(1).toLowerCase();
+
+    return { name, initials, subtitle };
+  },
+);

@@ -6,17 +6,20 @@ import { usePathname } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Badge } from "@/components/Badge";
 import { cn } from "@/lib/cn";
-import { NAV_ITEMS, ROLE_USER, type Role } from "@/lib/roles";
+import { NAV_ITEMS, ROLE_USER, type Role, type RoleUser } from "@/lib/roles";
 
 export interface NavShellProps {
   role: Role;
+  /** Real signed-in identity, when known. Falls back to the role's demo
+   * placeholder (e.g. on /style-guide, or when previewing another role). */
+  user?: RoleUser;
   className?: string;
 }
 
-export function NavShell({ role, className }: NavShellProps) {
+export function NavShell({ role, user: userOverride, className }: NavShellProps) {
   const pathname = usePathname();
   const items = NAV_ITEMS[role];
-  const user = ROLE_USER[role];
+  const user = userOverride ?? ROLE_USER[role];
 
   return (
     <aside
