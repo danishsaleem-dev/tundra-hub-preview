@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSignUp, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
+import { useSignUp } from "@clerk/nextjs/legacy";
 import { AlertTriangle } from "lucide-react";
 import { TextField } from "@/components/TextField";
 import { Button } from "@/components/Button";
@@ -15,9 +16,17 @@ import { Button } from "@/components/Button";
 // the URL, this page shows an error state and never renders a form, so
 // there is no path to account creation without an invitation — on top of
 // the Clerk instance itself being configured invite-only.
+//
+// Uses the legacy (non-Future) useSignUp API deliberately: the Future
+// API's signUp.ticket() and signUp.password() are separate calls, and
+// calling password() second re-declares emailAddress as part of a fresh
+// "password strategy" submission, which un-verifies the email the ticket
+// call had just verified (confirmed against a real missing_requirements /
+// unverified: email_address response). The legacy signUp.create() takes
+// strategy, ticket, and password together in one call, avoiding that.
 export default function SignUpPage() {
   const { isSignedIn } = useUser();
-  const { signUp, fetchStatus } = useSignUp();
+  const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
   const searchParams = useSearchParams();
   const ticket = searchParams.get("__clerk_ticket");
@@ -26,69 +35,60 @@ export default function SignUpPage() {
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isSignedIn || signUp.status === "complete") {
+    if (isSignedIn) {
       router.push("/dashboard");
     }
-  }, [isSignedIn, signUp.status, router]);
+  }, [isSignedIn, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!ticket) return;
+    if (!ticket || !isLoaded) return;
     setSubmitError(null);
+    setSubmitting(true);
 
-    const { error } = await signUp.ticket({ firstName, lastName, ticket });
-    if (error) {
-      setSubmitError(error.message ?? "Something went wrong completing your invitation.");
-      return;
-    }
-
-    // This instance requires a password (confirmed via a real
-    // missing_requirements response) — the ticket call alone verifies the
-    // invited email but doesn't carry a password field, so a second call is
-    // needed to supply it against the same in-progress sign-up.
-    if (signUp.status !== "complete" && signUp.missingFields?.includes("password")) {
-      const emailAddress = signUp.emailAddress;
-      if (!emailAddress) {
-        setSubmitError("Could not read the invited email address from the invitation.");
-        return;
-      }
-      const { error: passwordError } = await signUp.password({ password, emailAddress });
-      if (passwordError) {
-        setSubmitError(passwordError.message ?? "Something went wrong setting your password.");
-        return;
-      }
-    }
-
-    if (signUp.status === "complete") {
-      await signUp.finalize({
-        navigate: ({ decorateUrl }) => {
-          const url = decorateUrl("/dashboard");
-          if (url.startsWith("http")) {
-            window.location.href = url;
-          } else {
-            router.push(url);
-          }
-        },
+    try {
+      const attempt = await signUp.create({
+        strategy: "ticket",
+        ticket,
+        firstName,
+        lastName,
+        password,
       });
-    } else {
-      // Don't guess at why — surface what Clerk actually reports so this is
-      // debuggable from the error message alone instead of DevTools.
+
+      if (attempt.status === "complete") {
+        await setActive({ session: attempt.createdSessionId });
+        router.push("/dashboard");
+        return;
+      }
+
+      // Don't guess at why — surface what Clerk actually reports so this
+      // is debuggable from the error message alone instead of DevTools.
       console.error("Ticket sign-up did not complete", {
-        status: signUp.status,
-        missingFields: signUp.missingFields,
-        unverifiedFields: signUp.unverifiedFields,
-        requiredFields: signUp.requiredFields,
+        status: attempt.status,
+        missingFields: attempt.missingFields,
+        unverifiedFields: attempt.unverifiedFields,
       });
       const details = [
-        `status: ${signUp.status}`,
-        signUp.missingFields?.length ? `missing: ${signUp.missingFields.join(", ")}` : null,
-        signUp.unverifiedFields?.length ? `unverified: ${signUp.unverifiedFields.join(", ")}` : null,
+        `status: ${attempt.status}`,
+        attempt.missingFields?.length ? `missing: ${attempt.missingFields.join(", ")}` : null,
+        attempt.unverifiedFields?.length
+          ? `unverified: ${attempt.unverifiedFields.join(", ")}`
+          : null,
       ]
         .filter(Boolean)
         .join(" — ");
       setSubmitError(`Sign-up could not be completed (${details}).`);
+    } catch (err) {
+      const message =
+        err && typeof err === "object" && "errors" in err
+          ? JSON.stringify((err as { errors: unknown }).errors)
+          : String(err);
+      setSubmitError(message);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -159,11 +159,7 @@ export default function SignUpPage() {
             <p className="text-sm text-critical-text">{submitError}</p>
           )}
 
-          <Button
-            type="submit"
-            className="w-full"
-            loading={fetchStatus === "fetching"}
-          >
+          <Button type="submit" className="w-full" loading={submitting}>
             Continue
           </Button>
 
