@@ -20,6 +20,18 @@ enum UserRole {
   ATHLETE
 }
 
+// Tracks the invite lifecycle for an Athlete/Recruiter record's login access.
+// The record is the source of true identity (created by an admin, e.g. via
+// intake); login is optional and attached later by inviting that record's
+// email. PENDING means a Clerk invitation was sent but not yet accepted;
+// ACTIVE means the user.created webhook confirmed acceptance and linked the
+// User row. Revoking or a stale invite resets this back to NOT_INVITED.
+enum InviteStatus {
+  NOT_INVITED
+  PENDING
+  ACTIVE
+}
+
 enum Position {
   QB
   WR
@@ -240,6 +252,15 @@ model Recruiter {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
+  // Invite lifecycle — see InviteStatus for the state machine. invitedBy
+  // stores the inviting admin's User.id, not a relation: the admin who sent
+  // an invite shouldn't be forced to stay linkable/queryable from here, and
+  // this is an audit breadcrumb, not a navigable relationship.
+  inviteStatus       InviteStatus        @default(NOT_INVITED)
+  clerkInvitationId  String?
+  invitedAt          DateTime?
+  invitedBy          String?
+
   prospects          Prospect[]
   athletes           Athlete[]
   user               User?
@@ -322,6 +343,14 @@ model Athlete {
   archived                 Boolean  @default(false)
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
+
+  // Invite lifecycle — see InviteStatus for the state machine. invitedBy
+  // stores the inviting admin's User.id, not a relation, same reasoning as
+  // Recruiter.invitedBy above.
+  inviteStatus             InviteStatus @default(NOT_INVITED)
+  clerkInvitationId        String?
+  invitedAt                DateTime?
+  invitedBy                String?
 
   sensitiveInfo      AthleteSensitiveInfo?
   emergencyContacts  EmergencyContact[]

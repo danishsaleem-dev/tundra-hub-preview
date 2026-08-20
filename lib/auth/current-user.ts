@@ -63,3 +63,12 @@ export const getCurrentDisplayUser = cache(
     return { name, initials, subtitle };
   },
 );
+
+// Guard for admin-only API routes. Returns the admin's CurrentUser (so
+// callers can stamp `invitedBy` etc.) or null if the caller isn't a
+// signed-in admin — routes should turn a null into a 401/403, not throw.
+export async function requireAdmin(): Promise<CurrentUser | null> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") return null;
+  return user;
+}
