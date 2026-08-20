@@ -1,6 +1,20 @@
 import "server-only";
+import { headers } from "next/headers";
 import { clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+
+// The invitation email's landing destination is controlled by the
+// redirectUrl passed at invitation-creation time — NOT by
+// NEXT_PUBLIC_CLERK_SIGN_UP_URL (that only governs in-app "Sign up" links).
+// Leaving it unset lands on Clerk's own hosted accounts.dev portal, which is
+// what every invite did before this. Derived from request headers rather
+// than a hardcoded domain so it's correct in both dev and prod.
+async function signUpRedirectUrl(): Promise<string> {
+  const h = await headers();
+  const host = h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}/sign-up`;
+}
 
 // Role determines which table an invite links to — RECRUITER and ATHLETE
 // always link to an existing record (never create one; the record is the
@@ -75,6 +89,7 @@ export async function createRecordInvite(
   const invitation = await client.invitations.createInvitation({
     emailAddress: record.email,
     publicMetadata: { role, recordId } satisfies InviteMetadata,
+    redirectUrl: await signUpRedirectUrl(),
   });
 
   const model = modelFor(role);
@@ -129,6 +144,7 @@ export async function resendRecordInvite(
   const invitation = await client.invitations.createInvitation({
     emailAddress: record.email,
     publicMetadata: { role, recordId } satisfies InviteMetadata,
+    redirectUrl: await signUpRedirectUrl(),
     ignoreExisting: true,
   });
 
@@ -186,5 +202,6 @@ export async function createAdminInvite(email: string) {
   return client.invitations.createInvitation({
     emailAddress: email,
     publicMetadata: { role: "ADMIN", recordId: null } satisfies InviteMetadata,
+    redirectUrl: await signUpRedirectUrl(),
   });
 }
