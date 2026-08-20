@@ -21,6 +21,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const invitation = await createAdminInvite(email);
-  return NextResponse.json({ invitation });
+  try {
+    const invitation = await createAdminInvite(email);
+    return NextResponse.json({ invitation });
+  } catch (err) {
+    console.error("POST /api/admin/invites/admin failed", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
+  }
 }

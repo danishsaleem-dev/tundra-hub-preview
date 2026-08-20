@@ -30,6 +30,10 @@ export async function POST(request: Request) {
     if (err instanceof InviteError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
-    throw err;
+    console.error("POST /api/admin/invites/revoke failed", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
   }
 }

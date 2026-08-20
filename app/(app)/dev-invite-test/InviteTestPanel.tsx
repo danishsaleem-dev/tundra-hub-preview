@@ -46,7 +46,13 @@ export function InviteTestPanel({ athletes, recruiters }: InviteTestPanelProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recordType, recordId }),
       });
-      const body = await res.json();
+      const raw = await res.text();
+      let body: unknown;
+      try {
+        body = raw ? JSON.parse(raw) : "(empty response body)";
+      } catch {
+        body = raw;
+      }
       setLog(`${action.toUpperCase()} ${res.status}\n${JSON.stringify(body, null, 2)}`);
     } catch (err) {
       setLog(`${action.toUpperCase()} failed: ${String(err)}`);
