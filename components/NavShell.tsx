@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SignOutButton } from "@clerk/nextjs";
+import { LogOut } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { Badge } from "@/components/Badge";
 import { cn } from "@/lib/cn";
@@ -70,10 +72,24 @@ export function NavShell({ role, user: userOverride, className }: NavShellProps)
 
       <div className="flex items-center gap-3 border-t border-white/10 px-5 py-4">
         <Avatar name={user.name} initials={user.initials} />
-        <div className="leading-tight">
-          <p className="text-sm font-semibold text-white">{user.name}</p>
+        <div className="min-w-0 flex-1 leading-tight">
+          <p className="truncate text-sm font-semibold text-white">{user.name}</p>
           <p className="text-xs text-slate-400">{user.subtitle}</p>
         </div>
+        {/* Only the real signed-in user (userOverride set) gets a sign-out
+         * control — style-guide demos and role-preview placeholders have no
+         * session to sign out of. */}
+        {userOverride ? (
+          <SignOutButton>
+            <button
+              type="button"
+              aria-label="Sign out"
+              className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </SignOutButton>
+        ) : null}
       </div>
     </aside>
   );
