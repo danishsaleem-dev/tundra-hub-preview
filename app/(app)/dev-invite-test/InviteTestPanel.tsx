@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
+import { TextField } from "@/components/TextField";
 
 interface Record_ {
   id: string;
@@ -32,6 +33,30 @@ const ENDPOINT: Record<Action, string> = {
 export function InviteTestPanel({ athletes, recruiters }: InviteTestPanelProps) {
   const [log, setLog] = useState<string>("Responses will appear here.");
   const [pending, setPending] = useState<string | null>(null);
+  const [adminEmail, setAdminEmail] = useState("");
+
+  async function runAdminInvite() {
+    setPending("admin-invite");
+    try {
+      const res = await fetch("/api/admin/invites/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: adminEmail }),
+      });
+      const raw = await res.text();
+      let body: unknown;
+      try {
+        body = raw ? JSON.parse(raw) : "(empty response body)";
+      } catch {
+        body = raw;
+      }
+      setLog(`ADMIN INVITE ${res.status}\n${JSON.stringify(body, null, 2)}`);
+    } catch (err) {
+      setLog(`ADMIN INVITE failed: ${String(err)}`);
+    } finally {
+      setPending(null);
+    }
+  }
 
   async function run(
     action: Action,
@@ -142,6 +167,28 @@ export function InviteTestPanel({ athletes, recruiters }: InviteTestPanelProps) 
             inviteStatus={a.inviteStatus}
           />
         ))}
+      </div>
+      <div className="rounded-xl border border-card-tint bg-white p-5">
+        <h2 className="mb-2 text-sm font-bold text-surface-navy">
+          Admin invite (no record — separate path)
+        </h2>
+        <div className="flex items-end gap-2">
+          <TextField
+            label="Email"
+            containerClassName="flex-1"
+            value={adminEmail}
+            onChange={(e) => setAdminEmail(e.target.value)}
+            placeholder="new-admin@example.com"
+          />
+          <Button
+            variant="outline"
+            loading={pending === "admin-invite"}
+            disabled={!adminEmail}
+            onClick={runAdminInvite}
+          >
+            Invite
+          </Button>
+        </div>
       </div>
       <pre className="whitespace-pre-wrap rounded-xl border border-card-tint bg-surface-navy p-4 text-xs text-white">
         {log}
