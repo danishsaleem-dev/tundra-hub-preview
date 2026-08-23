@@ -1,0 +1,28 @@
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { prisma } from "@/lib/prisma";
+import { jsonError } from "@/lib/api/http";
+
+// Admin-only — a Recruiter has read-only access to NIL Deals for their
+// assigned athletes, no write access at all (not even update), so archive
+// is exclusively an admin action here.
+export async function POST(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const user = await getCurrentUser();
+  if (!user) return jsonError("Unauthorized", 401);
+  if (user.role !== "ADMIN") return jsonError("Forbidden", 403);
+
+  const { id } = await params;
+
+  const existing = await prisma.nilDeal.findUnique({ where: { id } });
+  if (!existing) return jsonError("Not found", 404);
+
+  const nilDeal = await prisma.nilDeal.update({
+    where: { id },
+    data: { archived: true },
+    include: { payments: true },
+  });
+  return NextResponse.json({ nilDeal });
+}
