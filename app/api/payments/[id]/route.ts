@@ -15,6 +15,10 @@ export async function GET(
 
   const { id } = await params;
 
+  // Deliberately no `archived: false` filter here, unlike the list route —
+  // archiving a record must not cut off direct access to it by id, per
+  // M5's retrievability requirement. The list route is the only place
+  // that hides archived records by default.
   if (user.role === "ADMIN") {
     const payment = await prisma.payment.findUnique({ where: { id } });
     if (!payment) return jsonError("Not found", 404);
