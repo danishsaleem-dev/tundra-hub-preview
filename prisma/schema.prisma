@@ -199,6 +199,50 @@ enum PaymentStatus {
   PAID
 }
 
+// ══════════════════════════════════════════════════════════════════
+// ORGANIZATION — INERT SCAFFOLDING, NOT YET ENFORCED ANYWHERE.
+//
+// This table and every organizationId column that references it
+// (present on User, Recruiter, Athlete, Prospect, NilDeal, Payment)
+// exist purely as schema preparation for a future multi-tenant
+// decision that HAS NOT BEEN MADE YET. As of this migration:
+//
+//   - Zero routes read, filter, or validate organizationId.
+//   - Zero queries anywhere in this codebase scope by organization.
+//   - Zero RBAC checks reference it in any way.
+//
+// Every existing route behaves exactly as if this column did not
+// exist. This single Organization row (Tundra, fixed id below) exists
+// only so the organizationId columns have something real to default
+// to — not because multi-org support is being built now.
+//
+// Wiring this into real scoping/filtering logic is an explicit,
+// separate decision for later (M3+). If you are reading this in a
+// future session with no memory of this conversation: do not assume
+// any enforcement exists just because this column is present on a
+// table. Check the actual route code, not this comment, to know the
+// truth — grep for "organizationId" across app/api and see for
+// yourself that nothing reads it.
+// ══════════════════════════════════════════════════════════════════
+model Organization {
+  // Fixed, well-known id for the single Tundra row this migration
+  // seeds — deliberately not auto-generated, since every
+  // organizationId default below is a literal reference to this exact
+  // value. Do not change this UUID without also updating every
+  // @default() that points at it.
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users      User[]
+  recruiters Recruiter[]
+  athletes   Athlete[]
+  prospects  Prospect[]
+  nilDeals   NilDeal[]
+  payments   Payment[]
+}
+
 // ── Identity & Access ─────────────────────────────────
 
 model User {
@@ -207,6 +251,12 @@ model User {
   role        UserRole
   email       String     @unique
   createdAt   DateTime   @default(now())
+
+  // INERT — see the Organization model comment above. Present, has a
+  // real default and a real FK constraint, but not read, filtered, or
+  // enforced by any route or query anywhere in this codebase yet.
+  organizationId String       @default("20a306cd-c81b-43a9-8cde-e788177b4ccd")
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Exactly one of these is set, matching the user's role — enforced two ways:
   //   1. Database CHECK constraint (the actual guarantee — see migration
@@ -264,6 +314,13 @@ model Recruiter {
   prospects          Prospect[]
   athletes           Athlete[]
   user               User?
+
+  // INERT — see the Organization model comment near the top of this
+  // file. Present, has a real default and a real FK constraint, but
+  // not read, filtered, or enforced by any route or query anywhere in
+  // this codebase yet.
+  organizationId String       @default("20a306cd-c81b-43a9-8cde-e788177b4ccd")
+  organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
 model Athlete {
@@ -357,6 +414,13 @@ model Athlete {
   nilDeals           NilDeal[]
   user               User?
 
+  // INERT — see the Organization model comment near the top of this
+  // file. Present, has a real default and a real FK constraint, but
+  // not read, filtered, or enforced by any route or query anywhere in
+  // this codebase yet.
+  organizationId String       @default("20a306cd-c81b-43a9-8cde-e788177b4ccd")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   // NOTE: no compliance-status field — deliberately excluded, matching the
   // agreed "no compliance field of any kind in Phase 1" scope, even though
   // the source Airtable Athletes table has one.
@@ -433,6 +497,13 @@ model Prospect {
   archived                  Boolean                @default(false)
   createdAt                 DateTime               @default(now())
   updatedAt                 DateTime               @updatedAt
+
+  // INERT — see the Organization model comment near the top of this
+  // file. Present, has a real default and a real FK constraint, but
+  // not read, filtered, or enforced by any route or query anywhere in
+  // this codebase yet.
+  organizationId String       @default("20a306cd-c81b-43a9-8cde-e788177b4ccd")
+  organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
 model NilDeal {
@@ -462,6 +533,13 @@ model NilDeal {
   updatedAt        DateTime          @updatedAt
 
   payments         Payment[]
+
+  // INERT — see the Organization model comment near the top of this
+  // file. Present, has a real default and a real FK constraint, but
+  // not read, filtered, or enforced by any route or query anywhere in
+  // this codebase yet.
+  organizationId String       @default("20a306cd-c81b-43a9-8cde-e788177b4ccd")
+  organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
 model Payment {
@@ -491,6 +569,13 @@ model Payment {
   //   isOverdue            = status != PAID && dueDate < now()
   //   collectionRequired   = status != PAID && invoiceSent == true
   //   daysSinceInvoiceSent = daysBetween(invoiceSentDate, now())
+
+  // INERT — see the Organization model comment near the top of this
+  // file. Present, has a real default and a real FK constraint, but
+  // not read, filtered, or enforced by any route or query anywhere in
+  // this codebase yet.
+  organizationId String       @default("20a306cd-c81b-43a9-8cde-e788177b4ccd")
+  organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
 // ── Deferred to Phase 2 — not modeled here ─────────────
