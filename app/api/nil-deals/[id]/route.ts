@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError } from "@/lib/api/http";
@@ -103,16 +104,33 @@ export async function PATCH(
   if (updated.contractStatus === "SIGNED") {
     const linkedPayment = await prisma.payment.findFirst({ where: { nilDealId: id } });
     if (!linkedPayment) {
-      // dealValue is guaranteed non-null here — the pre-check above
-      // already rejected the only case where it wouldn't be.
-      await prisma.payment.create({
-        data: {
-          paymentName: `${updated.dealName} Payment`,
-          nilDealId: updated.id,
-          paymentAmount: updated.dealValue!,
-          status: "PENDING",
-        },
-      });
+      try {
+        // dealValue is guaranteed non-null here — the pre-check above
+        // already rejected the only case where it wouldn't be.
+        // isAutoCreated: true is what the partial unique index enforces
+        // on — this is the one and only Payment allowed to carry it for
+        // this deal, at the database level, not just via the findFirst
+        // check above.
+        await prisma.payment.create({
+          data: {
+            paymentName: `${updated.dealName} Payment`,
+            nilDealId: updated.id,
+            paymentAmount: updated.dealValue!,
+            status: "PENDING",
+            isAutoCreated: true,
+          },
+        });
+      } catch (err) {
+        // P2002 (unique constraint violation) here means two requests
+        // raced past the findFirst check above and both tried to create
+        // the auto-payment — the database's partial unique index is the
+        // real guarantee, this in-app check is just the common case's
+        // fast path. Whichever request loses the race has nothing to do:
+        // a payment already exists, which was the whole goal.
+        const isRaceOnAutoCreatedUnique =
+          err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
+        if (!isRaceOnAutoCreatedUnique) throw err;
+      }
     }
   }
 

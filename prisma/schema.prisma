@@ -563,6 +563,23 @@ model Payment {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
+  // True only for the one Payment the NIL Deal "mark Signed" automation
+  // creates for a deal (see NilDeal PATCH route); false for every
+  // manually-created Payment, including legitimate installment payments
+  // on the same deal. The actual uniqueness guarantee — at most one
+  // isAutoCreated=true row per nilDealId — is a PARTIAL unique index,
+  // NOT expressible in this Prisma version's (6.12.0, pinned) schema
+  // DSL: `where` on @@unique only landed in Prisma 7.4+/8, and this
+  // project deliberately stays on 6.12.0. The index itself is real and
+  // enforced at the database level — it's just hand-written raw SQL in
+  // the migration for this field (see
+  // prisma/migrations/*_add_payment_auto_created_uniqueness/migration.sql)
+  // rather than generated from this file. A plain (non-partial) unique
+  // constraint on nilDealId would be wrong here — it would also block
+  // legitimate multiple manual/installment payments on the same deal,
+  // which must keep working.
+  isAutoCreated   Boolean       @default(false)
+
   // Computed at the API layer, NOT stored columns — matches how Airtable
   // itself treats these as formula fields, just implemented here instead:
   //   amountOutstanding    = paymentAmount - amountPaid
