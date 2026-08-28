@@ -65,9 +65,61 @@ export async function PATCH(
   const existing = await prisma.nilDeal.findUnique({ where: { id } });
   if (!existing) return jsonError("Not found", 404);
 
-  const nilDeal = await prisma.nilDeal.update({
+  // Resolve what this update actually leaves the deal in, merging the
+  // partial request onto the current row — needed below to decide
+  // up front whether the automatic Payment creation this triggers is
+  // even possible, before writing anything.
+  const resultingStatus = result.data.contractStatus ?? existing.contractStatus;
+  const resultingDealValue =
+    "dealValue" in result.data ? result.data.dealValue : existing.dealValue;
+
+  if (resultingStatus === "SIGNED") {
+    const linkedPayment = await prisma.payment.findFirst({ where: { nilDealId: id } });
+    // Payment.paymentAmount is NOT NULL at the schema level, so a missing
+    // dealValue makes the auto-created payment this transition requires
+    // literally unrepresentable — not a case for a $0 placeholder, which
+    // would just be a fabricated number on a real financial record.
+    // Rejected outright, before the update is applied, rather than
+    // letting the deal go SIGNED with no payment or a fake one.
+    if (!linkedPayment && resultingDealValue === null) {
+      return jsonError(
+        "Cannot mark this deal SIGNED without a dealValue — a Payment record would be created automatically for it, and paymentAmount can't be null. Set dealValue first, then retry.",
+        422,
+      );
+    }
+  }
+
+  const updated = await prisma.nilDeal.update({
     where: { id },
     data: result.data,
+  });
+
+  // Replicates the original Airtable automation: when a deal's status is
+  // (or becomes) Signed, ensure exactly one Payment exists for it. Keyed
+  // on existence, not on whether this specific request changed the
+  // status — so re-saving an already-Signed deal never creates a second
+  // one, matching the original automation's own idempotency, not just a
+  // single-request in-memory guard.
+  if (updated.contractStatus === "SIGNED") {
+    const linkedPayment = await prisma.payment.findFirst({ where: { nilDealId: id } });
+    if (!linkedPayment) {
+      // dealValue is guaranteed non-null here — the pre-check above
+      // already rejected the only case where it wouldn't be.
+      await prisma.payment.create({
+        data: {
+          paymentName: `${updated.dealName} Payment`,
+          nilDealId: updated.id,
+          paymentAmount: updated.dealValue!,
+          status: "PENDING",
+        },
+      });
+    }
+  }
+
+  // Refetch rather than reuse `updated` — payments may have just changed
+  // as a side effect above, and the response should reflect that.
+  const nilDeal = await prisma.nilDeal.findUnique({
+    where: { id },
     include: { payments: true },
   });
   return NextResponse.json({ nilDeal });
