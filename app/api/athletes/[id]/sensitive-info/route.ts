@@ -9,6 +9,10 @@ import { athleteSensitiveInfoWritableSchema } from "@/lib/validation/athlete-sen
 // Government ID, DOB, or home address. Create-or-update (upsert): a
 // freshly created Athlete has no AthleteSensitiveInfo row at all until an
 // admin sets one here.
+//
+// governmentIdUrl is stored here as a plain string reference only — the
+// actual file upload and encryption mechanism is separate, unbuilt
+// infrastructure, explicitly out of scope for this route.
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -28,11 +32,26 @@ export async function PATCH(
   const result = athleteSensitiveInfoWritableSchema.safeParse(raw);
   if (!result.success) return jsonValidationError(result.error);
 
-  const sensitiveInfo = await prisma.athleteSensitiveInfo.upsert({
-    where: { athleteId: id },
-    create: { athleteId: id, ...result.data },
-    update: result.data,
-  });
+  // The access log's existing action vocabulary (VIEW_GOVERNMENT_ID,
+  // VIEW_DOB, VIEW_ADDRESS) was written for reads. WRITE_SENSITIVE_INFO is
+  // the write-specific counterpart — one row per write call, same
+  // accountability standard as a read, in the same transaction as the
+  // actual write so the two can't drift (a logged write that didn't
+  // happen, or a write with no record of who made it).
+  const [sensitiveInfo] = await prisma.$transaction([
+    prisma.athleteSensitiveInfo.upsert({
+      where: { athleteId: id },
+      create: { athleteId: id, ...result.data },
+      update: result.data,
+    }),
+    prisma.athleteSensitiveInfoAccessLog.create({
+      data: {
+        athleteId: id,
+        accessedBy: user.id,
+        action: "WRITE_SENSITIVE_INFO",
+      },
+    }),
+  ]);
 
   return NextResponse.json({ sensitiveInfo });
 }
