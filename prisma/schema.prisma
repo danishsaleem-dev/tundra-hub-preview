@@ -347,6 +347,15 @@ model Athlete {
   conference               String?
   currentAcademicYear      AcademicYear?
   eligibilityRemaining     String?
+  // Never part of the general Athlete writable schema (admin or
+  // self-service) — no ordinary field edit can set this to true as a
+  // side effect. Any edit to eligibilityRemaining, by an admin or by the
+  // athlete themselves, forces this back to false: a verification is
+  // tied to a specific value, so changing the value stales the old
+  // verification rather than leaving a misleading true next to a new,
+  // unverified number. Only POST /api/athletes/[id]/verify-eligibility
+  // (admin-only) can set it to true.
+  eligibilityVerified      Boolean   @default(false)
   major                    String?
   gpa                      Decimal?  @db.Decimal(3, 2)
   graduationYear           Int?

@@ -81,3 +81,20 @@ export const athleteCreateSchema = athleteWritableSchema;
 export const athleteUpdateSchema = athleteWritableSchema.partial();
 
 export type AthleteWritableInput = z.infer<typeof athleteWritableSchema>;
+
+// Fields an ATHLETE may edit on their own record — same self-edit pattern
+// as Recruiter. Everything else on Athlete, and all of
+// AthleteSensitiveInfo, stays completely inaccessible to this role.
+export const ATHLETE_SELF_EDITABLE_FIELDS = [
+  "preferredName",
+  "phone",
+  "position",
+  "school",
+  "conference",
+  "socialProfiles",
+  "parentGuardianName",
+  "parentPhone",
+  "eligibilityRemaining",
+] as const;
+
+export type AthleteSelfEditableField = (typeof ATHLETE_SELF_EDITABLE_FIELDS)[number];

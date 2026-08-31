@@ -35,6 +35,7 @@ export const NON_ADMIN_ATHLETE_SELECT = {
   conference: true,
   currentAcademicYear: true,
   eligibilityRemaining: true,
+  eligibilityVerified: true,
   major: true,
   gpa: true,
   graduationYear: true,
@@ -80,5 +81,14 @@ export function toAthletePrismaData(
     recruitingProfile: data.recruitingProfile === null ? Prisma.JsonNull : data.recruitingProfile,
     socialProfiles: data.socialProfiles === null ? Prisma.JsonNull : data.socialProfiles,
     nilPreferences: data.nilPreferences === null ? Prisma.JsonNull : data.nilPreferences,
+    // eligibilityVerified is never in AthleteWritableInput/the writable
+    // schema at all — the only way it can become true is the dedicated
+    // POST /api/athletes/[id]/verify-eligibility route. Here it's only
+    // ever forced to false, and only when this write actually touches
+    // eligibilityRemaining — a verification is tied to a specific value,
+    // so changing the value stales any prior verification, whether the
+    // caller is an admin or the athlete themselves (both routes funnel
+    // through this same function).
+    ...("eligibilityRemaining" in data ? { eligibilityVerified: false } : {}),
   } as Prisma.AthleteUncheckedCreateInput & Prisma.AthleteUncheckedUpdateInput;
 }
