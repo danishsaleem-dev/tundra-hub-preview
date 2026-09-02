@@ -3,9 +3,12 @@ import { AlertBanner } from "@/components/AlertBanner";
 import { KpiCard } from "@/components/KpiCard";
 import { Panel } from "@/components/Panel";
 import { StatusChip } from "@/components/StatusChip";
-import { ListRow, type ListRowTag } from "@/components/ListRow";
+import { ListRow } from "@/components/ListRow";
 import { ActivityItem } from "@/components/ActivityItem";
 import type { StatusVariant } from "@/lib/status";
+import type { DashboardSummary } from "@/lib/dashboard-summary";
+import type { ActivityItem as ActivityFeedItem } from "@/lib/activity-feed";
+import { formatCurrency, formatRelativeTime } from "@/lib/format";
 
 interface PaymentRow {
   label: string;
@@ -109,52 +112,6 @@ const TASKS: TaskRow[] = [
   },
 ];
 
-interface DealHealthRow {
-  title: string;
-  meta: string;
-  status: StatusVariant;
-  statusLabel: string;
-  tags?: ListRowTag[];
-}
-
-const DEAL_HEALTH: DealHealthRow[] = [
-  {
-    title: "Velocity Apparel – Caleb Fontaine",
-    meta: "$18,000 · Ends 2026-08-31",
-    status: "success",
-    statusLabel: "Active",
-  },
-  {
-    title: "Glacier Energy – Marcus Bellamy",
-    meta: "$24,000 · Ends 2026-10-14",
-    status: "success",
-    statusLabel: "Active",
-    tags: [{ variant: "warning", label: "Payment overdue 21 days" }],
-  },
-  {
-    title: "Champion's Table – Caleb Fontaine",
-    meta: "$10,500 · Ends 2026-12-31",
-    status: "success",
-    statusLabel: "Active",
-  },
-  {
-    title: "ProEdge Training – Trevon Garris",
-    meta: "$6,500 · Ends 2026-11-30",
-    status: "warning",
-    statusLabel: "Pre-Launch",
-    tags: [
-      { variant: "warning", label: "Compliance hold – disclosure pending" },
-      { variant: "warning", label: "Contract unsigned" },
-    ],
-  },
-  {
-    title: "SouthGrid Auto – Jaylon Prescott",
-    meta: "$15,000 · Ends 2026-10-31",
-    status: "success",
-    statusLabel: "Active",
-  },
-];
-
 interface ComplianceRow {
   title: string;
   meta: string;
@@ -201,129 +158,91 @@ const COMPLIANCE: ComplianceRow[] = [
   },
 ];
 
-interface ActivityRow {
-  title: string;
-  meta: string;
-  dotColor: string;
+const DEAL_STATUS_LABEL: Record<string, string> = {
+  DRAFTING: "Drafting",
+  SENT: "Sent",
+  SIGNED: "Signed (Active)",
+  COMPLETED: "Completed",
+};
+
+const DEAL_STATUS_VARIANT: Record<string, StatusVariant> = {
+  DRAFTING: "neutral",
+  SENT: "warning",
+  SIGNED: "success",
+  COMPLETED: "neutral",
+};
+
+const ACTIVITY_DOT_COLOR: Record<ActivityFeedItem["type"], string> = {
+  ATHLETE_CREATED: "bg-brand-blue",
+  PROSPECT_CREATED: "bg-violet-500",
+  DEAL_CREATED: "bg-brand-blue",
+  DEAL_SIGNED: "bg-success-text",
+  PAYMENT_CREATED: "bg-surface-navy",
+  PAYMENT_RECEIVED: "bg-success-text",
+  RECRUITER_ACTIVATED: "bg-warning-text",
+};
+
+export interface AdminDashboardContentProps {
+  summary: DashboardSummary;
+  activity: ActivityFeedItem[];
 }
 
-const ACTIVITY: ActivityRow[] = [
-  {
-    title: "Sent payment reminder to Velocity Apparel for pay2",
-    meta: "Marcus Webb · 85d ago",
-    dotColor: "bg-brand-blue",
-  },
-  {
-    title: "Logged contact with Quinton Hargrove family (phone call)",
-    meta: "Aaliyah Simmons · 85d ago",
-    dotColor: "bg-violet-500",
-  },
-  {
-    title: "Updated Glacier Energy deal stage – escalated to brand director",
-    meta: "Darnell Okafor · 86d ago",
-    dotColor: "bg-brand-blue",
-  },
-  {
-    title: "Uploaded draft contract for Trevon Garris (ProEdge deal)",
-    meta: "Jordan Pierce · 86d ago",
-    dotColor: "bg-surface-navy",
-  },
-  {
-    title: "Signed Caleb Fontaine (re-enrollment for 2026 season)",
-    meta: "Marcus Webb · 87d ago",
-    dotColor: "bg-success-text",
-  },
-  {
-    title: "Intro meeting scheduled with Brendan Faulkner and family",
-    meta: "Tyrese Harmon · 88d ago",
-    dotColor: "bg-violet-500",
-  },
-  {
-    title: "Champion's Table Q2 invoice generated and sent",
-    meta: "Darnell Okafor · 89d ago",
-    dotColor: "bg-brand-blue",
-  },
-  {
-    title: "System compliance review flagged Trevon Garris disclosure overdue",
-    meta: "Admin · 91d ago",
-    dotColor: "bg-warning-text",
-  },
-];
+export function AdminDashboardContent({
+  summary,
+  activity,
+}: AdminDashboardContentProps) {
+  const totalDealsTracked = Object.values(summary.nilDeals.breakdownByStatus).reduce(
+    (a, b) => a + b,
+    0,
+  );
 
-export function AdminDashboardContent() {
   return (
     <div className="space-y-5">
       <div className="space-y-2.5">
-        <AlertBanner
-          variant="critical"
-          message={
-            <>
-              <span className="font-semibold">Overdue Payment:</span>{" "}
-              Velocity Apparel – Q2 Payment — $4,500 outstanding · 34 days
-              since invoice
-            </>
-          }
-          action={
-            <span className="text-xs font-bold text-critical-text">
-              ACTION REQUIRED
-            </span>
-          }
-        />
-        <AlertBanner
-          variant="critical"
-          message={
-            <>
-              <span className="font-semibold">Overdue Payment:</span>{" "}
-              Glacier Energy – April Installment — $8,000 outstanding · 48
-              days since invoice
-            </>
-          }
-          action={
-            <span className="text-xs font-bold text-critical-text">
-              ACTION REQUIRED
-            </span>
-          }
-        />
-        <AlertBanner
-          variant="warning"
-          message={
-            <>
-              <span className="font-semibold">Compliance Overdue:</span> NIL
-              Activity Disclosure – ProEdge Training — Trevon Garris · Deal
-              on hold
-            </>
-          }
-          action={
-            <span className="text-xs font-bold text-warning-text">
-              ACTION REQUIRED
-            </span>
-          }
-        />
+        {summary.payments.overdueCount > 0 ? (
+          <AlertBanner
+            variant="critical"
+            message={
+              <>
+                <span className="font-semibold">Overdue Payments:</span>{" "}
+                {summary.payments.overdueCount} payment
+                {summary.payments.overdueCount === 1 ? "" : "s"} totaling{" "}
+                {formatCurrency(summary.payments.overdueTotalAmount)}{" "}
+                outstanding
+              </>
+            }
+            action={
+              <span className="text-xs font-bold text-critical-text">
+                ACTION REQUIRED
+              </span>
+            }
+          />
+        ) : null}
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard
           accent="brand"
           label="Active Athletes"
-          value="5"
-          subtext="↑ 2 added this quarter"
+          value={String(summary.activeAthleteCount)}
+          subtext="Non-archived roster"
         />
         <KpiCard
           accent="brand"
           label="Active NIL Deals"
-          value="4"
-          subtext="5 total deals tracked"
+          value={String(summary.nilDeals.activeCount)}
+          subtext={`${totalDealsTracked} total deals tracked`}
         />
         <KpiCard
           accent="critical"
           label="Outstanding Receivables"
-          value="$22,500"
-          subtext="2 invoices overdue"
+          value={formatCurrency(summary.payments.totalOutstandingReceivables)}
+          subtext={`${summary.payments.overdueCount} invoice${summary.payments.overdueCount === 1 ? "" : "s"} overdue`}
         />
         <KpiCard
           accent="success"
           label="Total Collected"
-          value="$8,000"
+          value={formatCurrency(summary.payments.totalCollectedLifetime)}
           subtext="Lifetime payments received"
         />
       </div>
@@ -413,22 +332,30 @@ export function AdminDashboardContent() {
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-3">
-        <Panel title="Deal Health">
+        <Panel
+          title="Deal Overview"
+          description={`${formatCurrency(summary.nilDeals.activeTotalContractValue)} in active (signed) contract value`}
+        >
           <ul className="divide-y divide-card-tint">
-            {DEAL_HEALTH.map((deal) => (
-              <ListRow
-                key={deal.title}
-                title={deal.title}
-                meta={deal.meta}
-                tags={deal.tags}
-                trailing={
-                  <StatusChip
-                    variant={deal.status}
-                    label={deal.statusLabel}
-                  />
-                }
-              />
-            ))}
+            {Object.entries(summary.nilDeals.breakdownByStatus).map(
+              ([status, count]) => (
+                <ListRow
+                  key={status}
+                  title={DEAL_STATUS_LABEL[status] ?? status}
+                  trailing={
+                    <>
+                      <span className="text-sm font-semibold text-surface-navy">
+                        {count}
+                      </span>
+                      <StatusChip
+                        variant={DEAL_STATUS_VARIANT[status] ?? "neutral"}
+                        label={count === 1 ? "deal" : "deals"}
+                      />
+                    </>
+                  }
+                />
+              ),
+            )}
           </ul>
         </Panel>
 
@@ -452,14 +379,20 @@ export function AdminDashboardContent() {
 
         <Panel title="Recent Activity">
           <ul className="max-h-80 divide-y divide-card-tint overflow-y-auto">
-            {ACTIVITY.map((item) => (
-              <ActivityItem
-                key={item.title}
-                title={item.title}
-                meta={item.meta}
-                dotColor={item.dotColor}
-              />
-            ))}
+            {activity.length === 0 ? (
+              <li className="py-4 text-center text-xs text-neutral-text">
+                No recent activity.
+              </li>
+            ) : (
+              activity.map((item) => (
+                <ActivityItem
+                  key={`${item.type}-${item.recordId}`}
+                  title={item.description}
+                  meta={formatRelativeTime(item.timestamp)}
+                  dotColor={ACTIVITY_DOT_COLOR[item.type]}
+                />
+              ))
+            )}
           </ul>
         </Panel>
       </div>
