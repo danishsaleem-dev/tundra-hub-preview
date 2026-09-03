@@ -27,7 +27,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const { userId } = await auth();
   if (!userId) return null;
 
-  return prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { clerkUserId: userId },
     select: {
       id: true,
@@ -36,8 +36,28 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       email: true,
       athleteId: true,
       recruiterId: true,
+      athlete: { select: { archived: true } },
+      recruiter: { select: { archived: true } },
     },
   });
+  if (!user) return null;
+
+  // A record archived after this User row was created (the relationship
+  // ended, access is meant to be revoked) must not let an existing or
+  // future session keep working — treated identically to "no account
+  // found" so every protected route's existing null-check already covers
+  // this with zero route-level changes. Only reachable for
+  // ATHLETE/RECRUITER; ADMIN has neither field set (role_link_consistency).
+  if (user.athlete?.archived || user.recruiter?.archived) return null;
+
+  return {
+    id: user.id,
+    clerkUserId: user.clerkUserId,
+    role: user.role,
+    email: user.email,
+    athleteId: user.athleteId,
+    recruiterId: user.recruiterId,
+  };
 });
 
 // Shapes the resolved identity for display (NavShell's user footer, etc.).
