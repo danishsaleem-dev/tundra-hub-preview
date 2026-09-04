@@ -32,27 +32,24 @@ const prisma = new PrismaClient();
 // recreated by hand for RBAC verification since M2: one recruiter, one
 // athlete assigned to them (in-scope), one athlete assigned to no one
 // (out-of-scope, for proving scoping actually excludes something).
+//
+// Deliberately no `email` here. A plausible-looking placeholder
+// (`name@example.com`) is worse than none: the invite flow would happily
+// send to it and report PENDING, with no way to tell it wasn't real until
+// someone waits on mail that's never coming. Leaving it unset makes the
+// app's own "no email on file" error do that job instead — set a real
+// address on the record before inviting it.
 async function main() {
   const recruiter = await prisma.recruiter.create({
-    data: {
-      name: "Test Recruiter — Sam Ortiz",
-      email: "sam.ortiz.seed@example.com",
-    },
+    data: { name: "Test Recruiter — Sam Ortiz" },
   });
 
   const assignedAthlete = await prisma.athlete.create({
-    data: {
-      athleteName: "Test Athlete — Riley Chen",
-      email: "riley.chen.seed@example.com",
-      recruiterId: recruiter.id,
-    },
+    data: { athleteName: "Test Athlete — Riley Chen", recruiterId: recruiter.id },
   });
 
   const unassignedAthlete = await prisma.athlete.create({
-    data: {
-      athleteName: "Test Athlete — Jordan Price",
-      email: "jordan.price.seed@example.com",
-    },
+    data: { athleteName: "Test Athlete — Jordan Price" },
   });
 
   console.log("Seeded:");
@@ -60,9 +57,9 @@ async function main() {
   console.log(`  Athlete (assigned to recruiter): ${assignedAthlete.athleteName} (${assignedAthlete.id})`);
   console.log(`  Athlete (unassigned): ${unassignedAthlete.athleteName} (${unassignedAthlete.id})`);
   console.log(
-    "\nTo test as these roles, create a dev-Clerk user for each and link it with a matching " +
-      "Postgres User row (role + recruiterId/athleteId) — this script only seeds the business-data " +
-      "records, not login accounts.",
+    "\nTo test as these roles: set a real email on the record you want to invite (`email` is " +
+      "deliberately left unset by this script), then use the admin invite flow to create a dev-Clerk " +
+      "account, accept it, and it'll pair itself with that record automatically via the user.created webhook.",
   );
 }
 
