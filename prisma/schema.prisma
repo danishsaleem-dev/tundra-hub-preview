@@ -422,6 +422,7 @@ model Athlete {
   emergencyContacts  EmergencyContact[]
   nilDeals           NilDeal[]
   user               User?
+  convertedFromProspect Prospect?
 
   // INERT — see the Organization model comment near the top of this
   // file. Present, has a real default and a real FK constraint, but
@@ -502,6 +503,15 @@ model Prospect {
 
   scoutingNotes             String?   // referral reason, strengths, development areas
   evaluationNotes           String?   // market fit, urgency, brand-fit observations
+
+  // Set only by POST /api/prospects/[id]/convert (admin-only), once status
+  // has reached SIGNED. @unique makes the 1:1 relationship a real DB
+  // guarantee (each converted Athlete traces back to exactly one Prospect,
+  // never shared) and doubles as the double-conversion guard — the route
+  // rejects a second attempt on a Prospect that already has this set,
+  // rather than trusting application logic alone to catch it.
+  convertedToAthleteId      String?                @unique
+  convertedToAthlete        Athlete?               @relation(fields: [convertedToAthleteId], references: [id])
 
   archived                  Boolean                @default(false)
   createdAt                 DateTime               @default(now())
