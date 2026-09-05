@@ -25,3 +25,13 @@ export function formatRelativeTime(isoTimestamp: string): string {
   const diffDays = Math.floor(diffHours / 24);
   return `${diffDays}d ago`;
 }
+
+// Turns a raw camelCase field name into a readable label for validation/
+// permission error messages (e.g. "eligibilityRemaining" -> "Eligibility
+// Remaining"). Not a lookup table — these are per-field API property
+// names, not the small fixed set of entity/product names in lib/labels.ts.
+export function humanizeFieldName(field: string): string {
+  return field
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/^./, (char) => char.toUpperCase());
+}

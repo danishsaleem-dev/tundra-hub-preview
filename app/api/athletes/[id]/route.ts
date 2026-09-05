@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError } from "@/lib/api/http";
+import { humanizeFieldName } from "@/lib/format";
 import {
   athleteUpdateSchema,
   ATHLETE_SELF_EDITABLE_FIELDS,
@@ -110,7 +111,7 @@ export async function PATCH(
   );
   if (disallowedKeys.length > 0) {
     return jsonError(
-      `These fields are not self-editable: ${disallowedKeys.join(", ")}`,
+      `These fields are not self-editable: ${disallowedKeys.map(humanizeFieldName).join(", ")}`,
       403,
     );
   }

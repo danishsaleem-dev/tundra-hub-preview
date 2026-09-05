@@ -9,6 +9,7 @@ import { Avatar } from "@/components/Avatar";
 import { Badge } from "@/components/Badge";
 import { cn } from "@/lib/cn";
 import { NAV_ITEMS, ROLE_USER, type Role, type RoleUser } from "@/lib/roles";
+import { PRODUCT_IDENTITY } from "@/lib/labels";
 
 export interface NavShellProps {
   role: Role;
@@ -39,9 +40,11 @@ export function NavShell({ role, user: userOverride, className }: NavShellProps)
           className="shrink-0"
         />
         <div className="leading-tight">
-          <p className="text-sm font-bold text-white">Tundra Sports Group</p>
+          <p className="text-sm font-bold text-white">
+            {PRODUCT_IDENTITY.organizationName}
+          </p>
           <p className="text-[10px] font-medium tracking-wide text-slate-400">
-            HUB
+            {PRODUCT_IDENTITY.productName.split(" ").at(-1)?.toUpperCase()}
           </p>
         </div>
       </div>

@@ -10,8 +10,13 @@ import { prisma } from "@/lib/prisma";
 // SIGNED, most recently touched" — it is NOT a record of the moment the
 // deal was actually signed, and a deal signed months ago with an
 // unrelated edit last week will outrank one genuinely signed yesterday.
-// The description wording below is chosen to read honestly given that
-// (no "just" or "recently" language on the updatedAt-based entries).
+// This returns structured data, not prose — the caller (the dashboard
+// component) assembles the final sentence using the entity-label lookup,
+// so a label change propagates here without this file knowing anything
+// about display strings. The wording chosen by that assembly is what
+// reads honestly given the above (no "just" or "recently" language on the
+// updatedAt-based entries) — this file only owns which record and which
+// event, not the sentence.
 export type ActivityItemType =
   | "ATHLETE_CREATED"
   | "PROSPECT_CREATED"
@@ -23,9 +28,12 @@ export type ActivityItemType =
 
 export interface ActivityItem {
   type: ActivityItemType;
-  description: string;
+  entityName: string;
   timestamp: string;
   recordId: string;
+  // Only meaningful for PAYMENT_CREATED — which of the two sentence
+  // templates the frontend should use.
+  isAutoCreated?: boolean;
 }
 
 // null = unscoped (Admin sees everything). A recruiterId scopes every
@@ -120,48 +128,44 @@ export async function getActivityFeed(scope: ActivityScope): Promise<ActivityIte
   const items: ActivityItem[] = [
     ...newAthletes.map((a) => ({
       type: "ATHLETE_CREATED" as const,
-      description: `New athlete added: ${a.athleteName}`,
+      entityName: a.athleteName,
       timestamp: a.createdAt.toISOString(),
       recordId: a.id,
     })),
     ...newProspects.map((p) => ({
       type: "PROSPECT_CREATED" as const,
-      description: `New prospect added: ${p.fullName}`,
+      entityName: p.fullName,
       timestamp: p.createdAt.toISOString(),
       recordId: p.id,
     })),
     ...newDeals.map((d) => ({
       type: "DEAL_CREATED" as const,
-      description: `New deal created: ${d.dealName}`,
+      entityName: d.dealName,
       timestamp: d.createdAt.toISOString(),
       recordId: d.id,
     })),
     ...signedDeals.map((d) => ({
       type: "DEAL_SIGNED" as const,
-      // Deliberately not "just signed" or "recently signed" — see the
-      // file-level comment on why that would overstate what updatedAt
-      // actually tells us.
-      description: `Deal signed: ${d.dealName}`,
+      entityName: d.dealName,
       timestamp: d.updatedAt.toISOString(),
       recordId: d.id,
     })),
     ...newPayments.map((p) => ({
       type: "PAYMENT_CREATED" as const,
-      description: p.isAutoCreated
-        ? `New payment auto-created: ${p.paymentName}`
-        : `New payment added: ${p.paymentName}`,
+      entityName: p.paymentName,
+      isAutoCreated: p.isAutoCreated,
       timestamp: p.createdAt.toISOString(),
       recordId: p.id,
     })),
     ...paidPayments.map((p) => ({
       type: "PAYMENT_RECEIVED" as const,
-      description: `Payment received: ${p.paymentName}`,
+      entityName: p.paymentName,
       timestamp: p.updatedAt.toISOString(),
       recordId: p.id,
     })),
     ...activatedRecruiters.map((r) => ({
       type: "RECRUITER_ACTIVATED" as const,
-      description: `Recruiter activated: ${r.name}`,
+      entityName: r.name,
       timestamp: r.updatedAt.toISOString(),
       recordId: r.id,
     })),

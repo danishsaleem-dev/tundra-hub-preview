@@ -9,6 +9,7 @@ import type { StatusVariant } from "@/lib/status";
 import type { DashboardSummary } from "@/lib/dashboard-summary";
 import type { ActivityItem as ActivityFeedItem } from "@/lib/activity-feed";
 import { formatCurrency, formatRelativeTime } from "@/lib/format";
+import { ENTITY_LABELS } from "@/lib/labels";
 
 interface PaymentRow {
   label: string;
@@ -182,6 +183,35 @@ const ACTIVITY_DOT_COLOR: Record<ActivityFeedItem["type"], string> = {
   RECRUITER_ACTIVATED: "bg-warning-text",
 };
 
+// Sentence assembly lives here, not in lib/activity-feed.ts — that file
+// hands back structured data (event type + entity name), and this is the
+// one place that turns it into display text, using the shared entity
+// labels so a label change reaches this feed the same way it reaches
+// every other converted display site.
+function describeActivity(item: ActivityFeedItem): string {
+  switch (item.type) {
+    case "ATHLETE_CREATED":
+      return `New ${ENTITY_LABELS.athlete.singular} added: ${item.entityName}`;
+    case "PROSPECT_CREATED":
+      return `New ${ENTITY_LABELS.prospect.singular} added: ${item.entityName}`;
+    case "DEAL_CREATED":
+      return `New ${ENTITY_LABELS.nilDeal.singular} created: ${item.entityName}`;
+    case "DEAL_SIGNED":
+      // Deliberately not "just signed" or "recently signed" — see the
+      // file-level comment in lib/activity-feed.ts on why that would
+      // overstate what updatedAt actually tells us.
+      return `${ENTITY_LABELS.nilDeal.singular} signed: ${item.entityName}`;
+    case "PAYMENT_CREATED":
+      return item.isAutoCreated
+        ? `New ${ENTITY_LABELS.payment.singular} auto-created: ${item.entityName}`
+        : `New ${ENTITY_LABELS.payment.singular} added: ${item.entityName}`;
+    case "PAYMENT_RECEIVED":
+      return `${ENTITY_LABELS.payment.singular} received: ${item.entityName}`;
+    case "RECRUITER_ACTIVATED":
+      return `${ENTITY_LABELS.recruiter.singular} activated: ${item.entityName}`;
+  }
+}
+
 export interface AdminDashboardContentProps {
   summary: DashboardSummary;
   activity: ActivityFeedItem[];
@@ -223,15 +253,15 @@ export function AdminDashboardContent({
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard
           accent="brand"
-          label="Active Athletes"
+          label={`Active ${ENTITY_LABELS.athlete.plural}`}
           value={String(summary.activeAthleteCount)}
           subtext="Non-archived roster"
         />
         <KpiCard
           accent="brand"
-          label="Active NIL Deals"
+          label={`Active ${ENTITY_LABELS.nilDeal.plural}`}
           value={String(summary.nilDeals.activeCount)}
-          subtext={`${totalDealsTracked} total deals tracked`}
+          subtext={`${totalDealsTracked} total ${ENTITY_LABELS.nilDeal.plural} tracked`}
         />
         <KpiCard
           accent="critical"
@@ -333,7 +363,7 @@ export function AdminDashboardContent({
 
       <div className="grid items-start gap-4 lg:grid-cols-3">
         <Panel
-          title="Deal Overview"
+          title={`${ENTITY_LABELS.nilDeal.singular} Overview`}
           description={`${formatCurrency(summary.nilDeals.activeTotalContractValue)} in active (signed) contract value`}
         >
           <ul className="divide-y divide-card-tint">
@@ -349,7 +379,11 @@ export function AdminDashboardContent({
                       </span>
                       <StatusChip
                         variant={DEAL_STATUS_VARIANT[status] ?? "neutral"}
-                        label={count === 1 ? "deal" : "deals"}
+                        label={
+                          count === 1
+                            ? ENTITY_LABELS.nilDeal.singular
+                            : ENTITY_LABELS.nilDeal.plural
+                        }
                       />
                     </>
                   }
@@ -387,7 +421,7 @@ export function AdminDashboardContent({
               activity.map((item) => (
                 <ActivityItem
                   key={`${item.type}-${item.recordId}`}
-                  title={item.description}
+                  title={describeActivity(item)}
                   meta={formatRelativeTime(item.timestamp)}
                   dotColor={ACTIVITY_DOT_COLOR[item.type]}
                 />

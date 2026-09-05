@@ -14,6 +14,7 @@ import {
   FileText,
   CircleUser,
 } from "lucide-react";
+import { ENTITY_LABELS } from "@/lib/labels";
 
 export type Role = "admin" | "recruiter" | "athlete";
 
@@ -28,20 +29,20 @@ export interface NavItem {
 
 export const ROLE_LABEL: Record<Role, string> = {
   admin: "Admin View",
-  recruiter: "Recruiter View",
-  athlete: "Athlete View",
+  recruiter: `${ENTITY_LABELS.recruiter.singular} View`,
+  athlete: `${ENTITY_LABELS.athlete.singular} View`,
 };
 
 export const NAV_ITEMS: Record<Role, NavItem[]> = {
   admin: [
     { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
-    { label: "Athletes", href: "/athletes", icon: Users },
-    { label: "Prospects", href: "/prospects", icon: Search },
-    { label: "NIL Deals", href: "/nil-deals", icon: Handshake },
+    { label: ENTITY_LABELS.athlete.plural, href: "/athletes", icon: Users },
+    { label: ENTITY_LABELS.prospect.plural, href: "/prospects", icon: Search },
+    { label: ENTITY_LABELS.nilDeal.plural, href: "/nil-deals", icon: Handshake },
     { label: "Tasks", href: "/tasks", icon: CheckSquare },
     { label: "Compliance", href: "/compliance", icon: ShieldCheck },
     { label: "Documents", href: "/documents", icon: Folder },
-    { label: "Payments", href: "/payments", icon: CreditCard },
+    { label: ENTITY_LABELS.payment.plural, href: "/payments", icon: CreditCard },
     { label: "Operator", href: "/operator", icon: Wrench },
     { label: "Settings", href: "/settings", icon: Settings },
     {
@@ -53,8 +54,8 @@ export const NAV_ITEMS: Record<Role, NavItem[]> = {
   ],
   recruiter: [
     { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
-    { label: "Prospects", href: "/prospects", icon: Search },
-    { label: "Athletes", href: "/athletes", icon: Users },
+    { label: ENTITY_LABELS.prospect.plural, href: "/prospects", icon: Search },
+    { label: ENTITY_LABELS.athlete.plural, href: "/athletes", icon: Users },
     { label: "Tasks", href: "/tasks", icon: CheckSquare },
     { label: "Notes / Activity", href: "/notes", icon: FileText },
     { label: "Settings", href: "/settings", icon: Settings },
@@ -78,6 +79,14 @@ export interface RoleUser {
 
 export const ROLE_USER: Record<Role, RoleUser> = {
   admin: { name: "Tundra Admin", initials: "TA", subtitle: "Admin" },
-  recruiter: { name: "Marcus Webb", initials: "MW", subtitle: "Recruiter" },
-  athlete: { name: "Caleb Fontaine", initials: "CF", subtitle: "Athlete" },
+  recruiter: {
+    name: "Marcus Webb",
+    initials: "MW",
+    subtitle: ENTITY_LABELS.recruiter.singular,
+  },
+  athlete: {
+    name: "Caleb Fontaine",
+    initials: "CF",
+    subtitle: ENTITY_LABELS.athlete.singular,
+  },
 };
