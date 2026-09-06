@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError } from "@/lib/api/http";
 import { humanizeFieldName } from "@/lib/format";
+import { logAudit } from "@/lib/audit-log";
 import {
   recruiterUpdateSchema,
   RECRUITER_SELF_EDITABLE_FIELDS,
@@ -70,6 +71,16 @@ export async function PATCH(
     if (!existing) return jsonError("Not found", 404);
 
     const recruiter = await prisma.recruiter.update({ where: { id }, data: result.data });
+
+    await logAudit({
+      actor: { id: user.id, role: user.role },
+      action: "UPDATE",
+      entityType: "RECRUITER",
+      entityId: id,
+      before: existing,
+      after: recruiter,
+    });
+
     return NextResponse.json({ recruiter });
   }
 
@@ -93,5 +104,15 @@ export async function PATCH(
   if (!existing) return jsonError("Not found", 404);
 
   const recruiter = await prisma.recruiter.update({ where: { id }, data: result.data });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "UPDATE",
+    entityType: "RECRUITER",
+    entityId: id,
+    before: existing,
+    after: recruiter,
+  });
+
   return NextResponse.json({ recruiter });
 }

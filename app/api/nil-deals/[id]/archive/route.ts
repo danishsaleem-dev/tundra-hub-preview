@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError } from "@/lib/api/http";
+import { logAudit } from "@/lib/audit-log";
 
 // Admin-only — a Recruiter has read-only access to NIL Deals for their
 // assigned athletes, no write access at all (not even update), so archive
@@ -24,5 +25,15 @@ export async function POST(
     data: { archived: true },
     include: { payments: true },
   });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "ARCHIVE",
+    entityType: "NIL_DEAL",
+    entityId: id,
+    before: existing,
+    after: nilDeal,
+  });
+
   return NextResponse.json({ nilDeal });
 }

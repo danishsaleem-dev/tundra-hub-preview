@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError } from "@/lib/api/http";
 import { humanizeFieldName } from "@/lib/format";
+import { logAudit } from "@/lib/audit-log";
 import {
   athleteUpdateSchema,
   ATHLETE_SELF_EDITABLE_FIELDS,
@@ -100,6 +101,16 @@ export async function PATCH(
       data: toAthletePrismaData(result.data),
       include: ADMIN_ATHLETE_INCLUDE,
     });
+
+    await logAudit({
+      actor: { id: user.id, role: user.role },
+      action: "UPDATE",
+      entityType: "ATHLETE",
+      entityId: id,
+      before: existing,
+      after: athlete,
+    });
+
     return NextResponse.json({ athlete });
   }
 
@@ -127,5 +138,15 @@ export async function PATCH(
     data: toAthletePrismaData(result.data),
     select: NON_ADMIN_ATHLETE_SELECT,
   });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "UPDATE",
+    entityType: "ATHLETE",
+    entityId: id,
+    before: existing,
+    after: athlete,
+  });
+
   return NextResponse.json({ athlete });
 }

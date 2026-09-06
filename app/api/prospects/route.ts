@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError, parseListParams } from "@/lib/api/http";
 import { prospectCreateSchema } from "@/lib/validation/prospect";
 import { toProspectPrismaData } from "@/lib/prospect-data";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
@@ -54,5 +55,14 @@ export async function POST(request: Request) {
   if (!result.success) return jsonValidationError(result.error);
 
   const prospect = await prisma.prospect.create({ data: toProspectPrismaData(result.data) });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "CREATE",
+    entityType: "PROSPECT",
+    entityId: prospect.id,
+    after: prospect,
+  });
+
   return NextResponse.json({ prospect }, { status: 201 });
 }

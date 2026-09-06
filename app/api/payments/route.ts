@@ -6,6 +6,7 @@ import { jsonError, jsonValidationError, parseListParams } from "@/lib/api/http"
 import { paymentCreateSchema } from "@/lib/validation/payment";
 import { applyInvoiceSentAutoStamp } from "@/lib/payment-data";
 import { withComputedPaymentFieldsList, withComputedPaymentFields } from "@/lib/payment-computed";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
@@ -73,5 +74,14 @@ export async function POST(request: Request) {
   const data = applyInvoiceSentAutoStamp(result.data, false) as Prisma.PaymentUncheckedCreateInput;
 
   const payment = await prisma.payment.create({ data });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "CREATE",
+    entityType: "PAYMENT",
+    entityId: payment.id,
+    after: payment,
+  });
+
   return NextResponse.json({ payment: withComputedPaymentFields(payment) }, { status: 201 });
 }

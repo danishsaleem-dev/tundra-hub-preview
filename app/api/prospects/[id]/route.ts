@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError } from "@/lib/api/http";
 import { prospectUpdateSchema } from "@/lib/validation/prospect";
 import { toProspectPrismaData } from "@/lib/prospect-data";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET(
   _request: Request,
@@ -66,5 +67,15 @@ export async function PATCH(
     where: { id },
     data: toProspectPrismaData(result.data),
   });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "UPDATE",
+    entityType: "PROSPECT",
+    entityId: id,
+    before: existing,
+    after: prospect,
+  });
+
   return NextResponse.json({ prospect });
 }

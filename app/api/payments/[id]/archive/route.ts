@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError } from "@/lib/api/http";
 import { withComputedPaymentFields } from "@/lib/payment-computed";
+import { logAudit } from "@/lib/audit-log";
 
 // Admin-only — a Recruiter has read-only access to Payments scoped through
 // their assigned athletes' NIL Deals, no write access at all.
@@ -23,5 +24,15 @@ export async function POST(
     where: { id },
     data: { archived: true },
   });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "ARCHIVE",
+    entityType: "PAYMENT",
+    entityId: id,
+    before: existing,
+    after: payment,
+  });
+
   return NextResponse.json({ payment: withComputedPaymentFields(payment) });
 }

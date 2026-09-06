@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError } from "@/lib/api/http";
 import { nilDealUpdateSchema } from "@/lib/validation/nil-deal";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET(
   _request: Request,
@@ -95,6 +96,15 @@ export async function PATCH(
     data: result.data,
   });
 
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "UPDATE",
+    entityType: "NIL_DEAL",
+    entityId: id,
+    before: existing,
+    after: updated,
+  });
+
   // Replicates the original Airtable automation: when a deal's status is
   // (or becomes) Signed, ensure exactly one Payment exists for it. Keyed
   // on existence, not on whether this specific request changed the
@@ -111,7 +121,7 @@ export async function PATCH(
         // on — this is the one and only Payment allowed to carry it for
         // this deal, at the database level, not just via the findFirst
         // check above.
-        await prisma.payment.create({
+        const autoPayment = await prisma.payment.create({
           data: {
             paymentName: `${updated.dealName} Payment`,
             nilDealId: updated.id,
@@ -119,6 +129,14 @@ export async function PATCH(
             status: "PENDING",
             isAutoCreated: true,
           },
+        });
+
+        await logAudit({
+          actor: { id: user.id, role: user.role },
+          action: "CREATE",
+          entityType: "PAYMENT",
+          entityId: autoPayment.id,
+          after: autoPayment,
         });
       } catch (err) {
         // P2002 (unique constraint violation) here means two requests

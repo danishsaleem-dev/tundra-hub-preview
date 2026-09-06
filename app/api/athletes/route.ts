@@ -8,6 +8,7 @@ import {
   NON_ADMIN_ATHLETE_SELECT,
   toAthletePrismaData,
 } from "@/lib/athlete-select";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
@@ -65,5 +66,14 @@ export async function POST(request: Request) {
     data: toAthletePrismaData(result.data),
     include: ADMIN_ATHLETE_INCLUDE,
   });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "CREATE",
+    entityType: "ATHLETE",
+    entityId: athlete.id,
+    after: athlete,
+  });
+
   return NextResponse.json({ athlete }, { status: 201 });
 }

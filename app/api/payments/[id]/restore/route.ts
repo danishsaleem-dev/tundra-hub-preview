@@ -3,6 +3,7 @@ import { createRestoreHandler } from "@/lib/restore";
 import { withComputedPaymentFields } from "@/lib/payment-computed";
 
 export const POST = createRestoreHandler({
+  entityType: "PAYMENT",
   findById: (id) => prisma.payment.findUnique({ where: { id } }),
   restore: async (id) =>
     withComputedPaymentFields(

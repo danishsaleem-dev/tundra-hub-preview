@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError, parseListParams } from "@/lib/api/http";
 import { recruiterCreateSchema } from "@/lib/validation/recruiter";
+import { logAudit } from "@/lib/audit-log";
 
 // Only ADMIN can list recruiters. A RECRUITER can see their own record
 // (via GET /api/recruiters/[id]) but not browse the full roster — no
@@ -39,5 +40,14 @@ export async function POST(request: Request) {
   if (!result.success) return jsonValidationError(result.error);
 
   const recruiter = await prisma.recruiter.create({ data: result.data });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "CREATE",
+    entityType: "RECRUITER",
+    entityId: recruiter.id,
+    after: recruiter,
+  });
+
   return NextResponse.json({ recruiter }, { status: 201 });
 }

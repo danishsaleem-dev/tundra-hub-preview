@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError } from "@/lib/api/http";
 import { ADMIN_ATHLETE_INCLUDE } from "@/lib/athlete-select";
+import { logAudit } from "@/lib/audit-log";
 
 // Admin-only, one-way pipeline terminal action: a SIGNED Prospect becomes a
 // real Athlete record. All three writes (create the Athlete, stamp the
@@ -32,7 +33,7 @@ export async function POST(
     return jsonError("This Prospect has already been converted to an Athlete.", 409);
   }
 
-  const athlete = await prisma.$transaction(async (tx) => {
+  const { newAthlete, recruiterAudit } = await prisma.$transaction(async (tx) => {
     const newAthlete = await tx.athlete.create({
       data: {
         athleteName: prospect.fullName,
@@ -57,15 +58,66 @@ export async function POST(
       data: { convertedToAthleteId: newAthlete.id },
     });
 
+    let recruiterAudit: { recruiterId: string; before: number; after: number } | null = null;
     if (prospect.recruiterId) {
-      await tx.recruiter.update({
+      const recruiterBefore = await tx.recruiter.findUnique({
+        where: { id: prospect.recruiterId },
+        select: { athletesSigned: true },
+      });
+      const recruiterAfter = await tx.recruiter.update({
         where: { id: prospect.recruiterId },
         data: { athletesSigned: { increment: 1 } },
+        select: { athletesSigned: true },
       });
+      recruiterAudit = {
+        recruiterId: prospect.recruiterId,
+        before: recruiterBefore?.athletesSigned ?? 0,
+        after: recruiterAfter.athletesSigned,
+      };
     }
 
-    return newAthlete;
+    return { newAthlete, recruiterAudit };
   });
 
-  return NextResponse.json({ athlete });
+  // Doesn't fit the single-entity before/after shape the other four
+  // actions use (CREATE/UPDATE/ARCHIVE/RESTORE) — this is one business
+  // event spanning three writes, so the changes payload is built by hand
+  // rather than diffed, describing all three: the Prospect's
+  // convertedToAthleteId flip, the new Athlete's copied fields, and the
+  // Recruiter counter's before/after (when there was a recruiter to
+  // credit). Never touches AthleteSensitiveInfo — the snapshot below only
+  // lists the fields the conversion actually copies.
+  await logAudit({
+    actor: { id: admin.id, role: admin.role },
+    action: "CONVERT",
+    entityType: "PROSPECT",
+    entityId: prospect.id,
+    changes: {
+      convertedToAthleteId: { before: null, after: newAthlete.id },
+      createdAthlete: {
+        id: newAthlete.id,
+        athleteName: newAthlete.athleteName,
+        email: newAthlete.email,
+        phone: newAthlete.phone,
+        position: newAthlete.position,
+        school: newAthlete.school,
+        parentGuardianName: newAthlete.parentGuardianName,
+        parentPhone: newAthlete.parentPhone,
+        socialProfiles: newAthlete.socialProfiles,
+        recruitingProfile: newAthlete.recruitingProfile,
+        recruiterId: newAthlete.recruiterId,
+      },
+      ...(recruiterAudit
+        ? {
+            recruiterAthletesSigned: {
+              recruiterId: recruiterAudit.recruiterId,
+              before: recruiterAudit.before,
+              after: recruiterAudit.after,
+            },
+          }
+        : {}),
+    },
+  });
+
+  return NextResponse.json({ athlete: newAthlete });
 }

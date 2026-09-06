@@ -614,5 +614,62 @@ model Payment {
   organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
+enum AuditAction {
+  CREATE
+  UPDATE
+  ARCHIVE
+  RESTORE
+  // The Prospect-to-Athlete conversion isn't a plain single-entity write
+  // (it creates an Athlete, updates the source Prospect, and increments a
+  // Recruiter's counter, all in one transaction) — its own action type
+  // rather than forcing it into CREATE or UPDATE, which would only tell
+  // half the story.
+  CONVERT
+}
+
+enum AuditEntityType {
+  ATHLETE
+  RECRUITER
+  PROSPECT
+  NIL_DEAL
+  PAYMENT
+}
+
+// General write-path audit trail for the five core modules. Deliberately
+// separate from AthleteSensitiveInfoAccessLog, which exists specifically
+// because government ID / date of birth / home address need stricter,
+// dedicated handling than anything else in this schema — this table must
+// never receive writes for those fields, and the sensitive-info route
+// must never call into this mechanism. Two independent logs, on purpose.
+model AuditLog {
+  id           String          @id @default(uuid())
+
+  // Plain field, not a relation — same reasoning as User.invitedBy /
+  // AthleteSensitiveInfoAccessLog.accessedBy elsewhere in this schema:
+  // the actor shouldn't be forced to stay linkable/queryable from here,
+  // this is an audit breadcrumb, not a navigable relationship.
+  actorUserId  String
+  actorRole    UserRole
+
+  action       AuditAction
+  entityType   AuditEntityType
+  entityId     String
+
+  // CREATE: a flat snapshot of the initial values.
+  // UPDATE/ARCHIVE/RESTORE: only the fields that actually changed, each
+  // as { before, after } — Jeffrey wants to know what something changed
+  // to, not just that it changed, so this is never the whole record and
+  // never just field names.
+  // CONVERT: a purpose-built payload describing the whole conversion
+  // event (new Athlete snapshot, the Prospect's convertedToAthleteId
+  // flip, the Recruiter counter's before/after) — it doesn't fit the
+  // single-entity before/after shape the other four actions use.
+  changes      Json
+
+  timestamp    DateTime        @default(now())
+
+  @@index([entityType, entityId])
+}
+
 // ── Deferred to Phase 2 — not modeled here ─────────────
 // Compliance, Tasks, Brands (as own table), Football Opportunities, System QA

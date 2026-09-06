@@ -5,6 +5,7 @@ import { jsonError, jsonValidationError } from "@/lib/api/http";
 import { paymentUpdateSchema } from "@/lib/validation/payment";
 import { applyInvoiceSentAutoStamp } from "@/lib/payment-data";
 import { withComputedPaymentFields } from "@/lib/payment-computed";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET(
   _request: Request,
@@ -66,5 +67,15 @@ export async function PATCH(
   const data = applyInvoiceSentAutoStamp(result.data, existing.invoiceSent);
 
   const payment = await prisma.payment.update({ where: { id }, data });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "UPDATE",
+    entityType: "PAYMENT",
+    entityId: id,
+    before: existing,
+    after: payment,
+  });
+
   return NextResponse.json({ payment: withComputedPaymentFields(payment) });
 }

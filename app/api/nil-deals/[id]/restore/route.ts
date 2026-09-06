@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { createRestoreHandler } from "@/lib/restore";
 
 export const POST = createRestoreHandler({
+  entityType: "NIL_DEAL",
   findById: (id) => prisma.nilDeal.findUnique({ where: { id } }),
   restore: (id) =>
     prisma.nilDeal.update({

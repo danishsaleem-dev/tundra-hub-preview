@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError, parseListParams } from "@/lib/api/http";
 import { nilDealCreateSchema } from "@/lib/validation/nil-deal";
+import { logAudit } from "@/lib/audit-log";
 
 // List view intentionally excludes the `payments` relation — keeps the
 // list lightweight, and the detail route (below) is the one place this
@@ -62,5 +63,14 @@ export async function POST(request: Request) {
     data: result.data,
     include: { payments: true },
   });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "CREATE",
+    entityType: "NIL_DEAL",
+    entityId: nilDeal.id,
+    after: nilDeal,
+  });
+
   return NextResponse.json({ nilDeal }, { status: 201 });
 }
