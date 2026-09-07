@@ -17,7 +17,14 @@ export async function POST(
 
   const { id } = await params;
 
-  const existing = await prisma.athlete.findUnique({ where: { id } });
+  // include, matching the update result below — see the same comment in
+  // app/api/athletes/[id]/route.ts for why this must not be a plain
+  // findUnique (the audit diff would otherwise log the athlete's actual
+  // sensitive-info snapshot as a false "change").
+  const existing = await prisma.athlete.findUnique({
+    where: { id },
+    include: ADMIN_ATHLETE_INCLUDE,
+  });
   if (!existing) return jsonError("Not found", 404);
 
   const athlete = await prisma.athlete.update({

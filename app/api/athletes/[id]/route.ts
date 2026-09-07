@@ -93,7 +93,15 @@ export async function PATCH(
     const result = athleteUpdateSchema.safeParse(raw);
     if (!result.success) return jsonValidationError(result.error);
 
-    const existing = await prisma.athlete.findUnique({ where: { id } });
+    // include, not a plain findUnique — must match the update result's
+    // shape below (also ADMIN_ATHLETE_INCLUDE) or the audit diff below
+    // would see sensitiveInfo appear out of nowhere on the "after" side
+    // and log the athlete's actual DOB/address/government-ID data as a
+    // "change" into this general log, which must never happen.
+    const existing = await prisma.athlete.findUnique({
+      where: { id },
+      include: ADMIN_ATHLETE_INCLUDE,
+    });
     if (!existing) return jsonError("Not found", 404);
 
     const athlete = await prisma.athlete.update({
@@ -130,7 +138,14 @@ export async function PATCH(
   const result = athleteUpdateSchema.pick(SELF_EDITABLE_SHAPE).safeParse(raw);
   if (!result.success) return jsonValidationError(result.error);
 
-  const existing = await prisma.athlete.findUnique({ where: { id } });
+  // select, matching the update result's shape below (also
+  // NON_ADMIN_ATHLETE_SELECT) — a plain findUnique here would carry
+  // fields like organizationId that the select result omits, and the
+  // audit diff below would log those as false "changed to null" entries.
+  const existing = await prisma.athlete.findUnique({
+    where: { id },
+    select: NON_ADMIN_ATHLETE_SELECT,
+  });
   if (!existing) return jsonError("Not found", 404);
 
   const athlete = await prisma.athlete.update({

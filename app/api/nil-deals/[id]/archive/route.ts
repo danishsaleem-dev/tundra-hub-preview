@@ -17,7 +17,13 @@ export async function POST(
 
   const { id } = await params;
 
-  const existing = await prisma.nilDeal.findUnique({ where: { id } });
+  // include, matching the update result below — a plain findUnique here
+  // would make `payments` appear only on the "after" side of the audit
+  // diff and log the deal's full payment history as a false "change".
+  const existing = await prisma.nilDeal.findUnique({
+    where: { id },
+    include: { payments: true },
+  });
   if (!existing) return jsonError("Not found", 404);
 
   const nilDeal = await prisma.nilDeal.update({
