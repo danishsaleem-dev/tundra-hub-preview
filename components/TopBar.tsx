@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Menu } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { ROLES, ROLE_LABEL, type Role } from "@/lib/roles";
 
@@ -9,6 +9,9 @@ export interface TopBarProps {
   title: string;
   role: Role;
   onRoleChange: (role: Role) => void;
+  /** Opens the off-canvas mobile nav drawer — the button only renders
+   * below the md breakpoint, matching NavShell's own breakpoint. */
+  onMenuClick?: () => void;
   hasNotifications?: boolean;
 }
 
@@ -16,13 +19,28 @@ export function TopBar({
   title,
   role,
   onRoleChange,
+  onMenuClick,
   hasNotifications = true,
 }: TopBarProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-card-tint bg-white px-8">
-      <h1 className="text-lg font-bold text-surface-navy">{title}</h1>
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-card-tint bg-white px-4 sm:px-8">
+      <div className="flex min-w-0 items-center gap-3">
+        {onMenuClick ? (
+          <button
+            type="button"
+            aria-label="Open menu"
+            onClick={onMenuClick}
+            className="shrink-0 text-surface-navy md:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        ) : null}
+        <h1 className="truncate text-lg font-bold text-surface-navy">
+          {title}
+        </h1>
+      </div>
 
       <div className="flex items-center gap-3">
         <div className="relative">

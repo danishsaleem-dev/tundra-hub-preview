@@ -27,14 +27,27 @@ export function AppShell({
   content,
 }: AppShellProps) {
   const [role, setRole] = useState<Role>(defaultRole);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const body = content ? (content[role] ?? children) : children;
 
   return (
     <div className="flex h-screen bg-page-bg">
-      <NavShell role={role} user={role === defaultRole ? user : undefined} />
+      <NavShell
+        role={role}
+        user={role === defaultRole ? user : undefined}
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar title={title} role={role} onRoleChange={setRole} />
-        <main className="flex-1 overflow-y-auto px-8 py-6">{body}</main>
+        <TopBar
+          title={title}
+          role={role}
+          onRoleChange={setRole}
+          onMenuClick={() => setMobileNavOpen(true)}
+        />
+        <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-8 sm:py-6">
+          {body}
+        </main>
       </div>
     </div>
   );
