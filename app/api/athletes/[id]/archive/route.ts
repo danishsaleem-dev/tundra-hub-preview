@@ -17,10 +17,12 @@ export async function POST(
 
   const { id } = await params;
 
-  // include, matching the update result below — see the same comment in
-  // app/api/athletes/[id]/route.ts for why this must not be a plain
-  // findUnique (the audit diff would otherwise log the athlete's actual
-  // sensitive-info snapshot as a false "change").
+  // include, matching the update result below — keeps this call site
+  // producing a complete diff. lib/audit-log.ts's computeChanges() is now
+  // hardened to never leak sensitiveInfo even if this shape is wrong (see
+  // its intersection-only key comparison), but fetching a matching shape
+  // here is still what makes ARCHIVE's audit entry show every field that
+  // actually changed, not just the ones both shapes happen to share.
   const existing = await prisma.athlete.findUnique({
     where: { id },
     include: ADMIN_ATHLETE_INCLUDE,

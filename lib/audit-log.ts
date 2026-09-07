@@ -46,9 +46,44 @@ function computeChanges(
     return snapshot;
   }
 
+  // Intersection, not union, of before/after keys — this is the structural
+  // guarantee against the asymmetric-shape bug class that once let a
+  // caller's mismatched select/include leak an athlete's actual
+  // AthleteSensitiveInfo snapshot into this general log (a key present via
+  // `include`/`select` on only one side read as "changed to/from null").
+  // A key can only ever be reported as changed — and only ever have its
+  // real value written here — when both snapshots actually carried it.
+  // Fetching before/after with matching shapes is still the caller's job
+  // (it's the only way to get a complete diff), but a future call site
+  // that gets that wrong now degrades to "some fields silently missing
+  // from this entry," never a leak.
+  const beforeKeys = Object.keys(before);
+  const afterKeys = new Set(Object.keys(after));
+  const comparableKeys = beforeKeys.filter((key) => afterKeys.has(key));
+
+  // Checked in both directions — comparableKeys can fall short of
+  // beforeKeys (before had a key after lacks) or of afterKeys.size (after
+  // had a key before lacks, the actual shape of the sensitive-info leak
+  // this replaces: ADMIN_ATHLETE_INCLUDE's extra `sensitiveInfo` key only
+  // ever showed up on the "after" side). Checking only the first direction
+  // would have missed exactly the case this exists to catch.
+  if (
+    process.env.NODE_ENV !== "production" &&
+    (comparableKeys.length !== beforeKeys.length || comparableKeys.length !== afterKeys.size)
+  ) {
+    const onlyBefore = beforeKeys.filter((key) => !afterKeys.has(key));
+    const onlyAfter = [...afterKeys].filter((key) => !beforeKeys.includes(key));
+    console.warn(
+      "[audit-log] before/after shape mismatch — these fields exist on only one " +
+        "side and were excluded from the diff, not compared: " +
+        JSON.stringify({ onlyBefore, onlyAfter }) +
+        ". This usually means the before and after queries used different " +
+        "select/include shapes — fetch both the same way.",
+    );
+  }
+
   const changes: Record<string, { before: unknown; after: unknown }> = {};
-  const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
-  for (const key of keys) {
+  for (const key of comparableKeys) {
     if (stableStringify(before[key]) !== stableStringify(after[key])) {
       changes[key] = { before: toJsonSafe(before[key]), after: toJsonSafe(after[key]) };
     }
