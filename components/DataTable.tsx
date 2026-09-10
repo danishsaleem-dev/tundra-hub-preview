@@ -17,7 +17,17 @@ export function Table({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className={cn("w-full border-collapse text-sm", className)}>
+      {/* min-w-max, not just w-full — without it, a table with several
+       * columns has nothing forcing it wider than a narrow viewport, so
+       * the browser crushes every column instead of the overflow-x-auto
+       * wrapper above ever getting to scroll. min-width beats width in
+       * the box model, so this still fills the container at normal
+       * widths and only kicks in once content genuinely needs more room
+       * than the screen has — found this only by actually checking a
+       * dense table at a real phone viewport, not by inspection. */}
+      <table
+        className={cn("w-full min-w-max border-collapse text-sm", className)}
+      >
         {children}
       </table>
     </div>

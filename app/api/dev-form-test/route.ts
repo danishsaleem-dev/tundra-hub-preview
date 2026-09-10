@@ -3,12 +3,14 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { jsonError, jsonValidationError } from "@/lib/api/http";
 
-// Scratch validation endpoint backing the M5 Day 1 form-system test
-// harness (app/(app)/dev-form-test) — proves the real
-// submit -> Zod validate -> jsonValidationError -> inline-field-error
-// pipeline end to end. No persistence: this isn't a real module, there's
-// nothing to store yet. Delete alongside the harness once the first real
-// M5 module exists and can prove the system for real instead.
+// Scratch endpoint backing the M5 form/list/detail test harnesses
+// (app/(app)/dev-form-test, app/(app)/dev-list-detail-test). POST proves
+// the real submit -> Zod validate -> jsonValidationError ->
+// inline-field-error pipeline; GET proves the detail view's
+// structural-exclusion claim against a real role-scoped API response.
+// No persistence either way: neither is a real module, there's nothing
+// to store yet. Delete alongside both harnesses once the first real M5
+// module exists and can prove the systems for real instead.
 const devFormTestSchema = z
   .object({
     name: z.string().min(1, "Name is required").max(100),
@@ -43,4 +45,31 @@ export async function POST(request: Request) {
   if (!result.success) return jsonValidationError(result.error);
 
   return NextResponse.json({ result: result.data });
+}
+
+// Backs the detail-view harness's role-scoped-data proof. internalNotes
+// is structurally absent from the response object for non-admin roles —
+// not sent as null, not filtered client-side — the exact same shape
+// NON_ADMIN_ATHLETE_SELECT already uses for the real Athlete route.
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return jsonError("Unauthorized", 401);
+
+  const base = {
+    id: "dev-record-1",
+    name: "Sample Test Record",
+    amount: "500.00",
+    dueDate: "2026-12-01",
+    notes: "Some notes about this record.\nSecond line.",
+    active: true,
+    status: "ACTIVE",
+  };
+
+  if (user.role !== "ADMIN") {
+    return NextResponse.json({ record: base });
+  }
+
+  return NextResponse.json({
+    record: { ...base, internalNotes: "Admin-only commentary on this record." },
+  });
 }

@@ -2,8 +2,7 @@
 // both the server (each module's form config + route handlers) and the
 // client (components/ConfigurableForm.tsx renders with it directly).
 import type { UserRole } from "@prisma/client";
-import { ENTITY_LABELS, type EntityKey } from "@/lib/labels";
-import { humanizeFieldName } from "@/lib/format";
+import { resolveEntityAwareLabel } from "@/lib/labels";
 
 // The shared config shape every M5 module's form will configure, rather
 // than building its own form from scratch. This file is the config layer
@@ -45,25 +44,8 @@ export interface FormFieldConfig {
   roles?: UserRole[];
 }
 
-// Field names that are foreign keys onto one of the five tracked entities
-// (recruiterId, athleteId, nilDealId, ...) resolve to that entity's own
-// label instead of an awkward humanized "Recruiter Id" — matching the
-// suffix convention every real FK field in this schema already uses.
-function fieldNameToEntityKey(fieldName: string): EntityKey | null {
-  for (const key of Object.keys(ENTITY_LABELS) as EntityKey[]) {
-    const suffix = key.charAt(0).toUpperCase() + key.slice(1) + "Id";
-    if (fieldName === `${key}Id` || fieldName.endsWith(suffix)) {
-      return key;
-    }
-  }
-  return null;
-}
-
 export function resolveFieldLabel(field: FormFieldConfig): string {
-  if (field.label) return field.label;
-  const entityKey = fieldNameToEntityKey(field.name);
-  if (entityKey) return ENTITY_LABELS[entityKey].singular;
-  return humanizeFieldName(field.name);
+  return resolveEntityAwareLabel(field.name, field.label);
 }
 
 // The structural-exclusion filter — a field with `roles` set that doesn't
