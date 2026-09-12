@@ -1,5 +1,5 @@
 import { TopBar } from "@/components/TopBar";
 
 export function TopBarDemo() {
-  return <TopBar title="Dashboard" role="admin" />;
+  return <TopBar title="Dashboard" />;
 }

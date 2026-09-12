@@ -1,11 +1,9 @@
 "use client";
 
 import { Bell, Menu } from "lucide-react";
-import { ROLE_LABEL, type Role } from "@/lib/roles";
 
 export interface TopBarProps {
   title: string;
-  role: Role;
   /** Opens the off-canvas mobile nav drawer — the button only renders
    * below the md breakpoint, matching NavShell's own breakpoint. */
   onMenuClick?: () => void;
@@ -14,7 +12,6 @@ export interface TopBarProps {
 
 export function TopBar({
   title,
-  role,
   onMenuClick,
   hasNotifications = true,
 }: TopBarProps) {
@@ -37,14 +34,6 @@ export function TopBar({
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Real role, display-only — there is no control here to view the
-         * product as a different role than the signed-in session actually
-         * is. */}
-        <span className="flex items-center gap-2 rounded-full border border-card-tint px-3 py-1.5 text-sm font-medium text-surface-navy">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />
-          {ROLE_LABEL[role]}
-        </span>
-
         <button
           type="button"
           aria-label="Notifications"

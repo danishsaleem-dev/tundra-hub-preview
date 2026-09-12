@@ -905,7 +905,7 @@ export default function StyleGuidePage() {
 
         <Section
           title="TopBar"
-          description="Page title, role badge, notification bell."
+          description="Page title, notification bell."
         >
           <div className="overflow-hidden rounded-lg border border-card-tint">
             <TopBarDemo />

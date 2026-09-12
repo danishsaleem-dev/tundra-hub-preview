@@ -26,12 +26,6 @@ export interface NavItem {
   badge?: string;
 }
 
-export const ROLE_LABEL: Record<Role, string> = {
-  admin: "Admin View",
-  recruiter: `${ENTITY_LABELS.recruiter.singular} View`,
-  athlete: `${ENTITY_LABELS.athlete.singular} View`,
-};
-
 export const NAV_ITEMS: Record<Role, NavItem[]> = {
   admin: [
     { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
