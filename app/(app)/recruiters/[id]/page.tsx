@@ -40,7 +40,7 @@ export default async function RecruiterDetailPage({
   return (
     <AppShell
       title={ENTITY_LABELS.recruiter.singular}
-      defaultRole={role}
+      role={role}
       user={displayUser ?? undefined}
     >
       <RecruiterDetailClient id={id} realRole={user!.role} />

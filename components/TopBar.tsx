@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Bell, ChevronDown, Menu } from "lucide-react";
-import { cn } from "@/lib/cn";
-import { ROLES, ROLE_LABEL, type Role } from "@/lib/roles";
+import { Bell, Menu } from "lucide-react";
+import { ROLE_LABEL, type Role } from "@/lib/roles";
 
 export interface TopBarProps {
   title: string;
   role: Role;
-  onRoleChange: (role: Role) => void;
   /** Opens the off-canvas mobile nav drawer — the button only renders
    * below the md breakpoint, matching NavShell's own breakpoint. */
   onMenuClick?: () => void;
@@ -18,12 +15,9 @@ export interface TopBarProps {
 export function TopBar({
   title,
   role,
-  onRoleChange,
   onMenuClick,
   hasNotifications = true,
 }: TopBarProps) {
-  const [open, setOpen] = useState(false);
-
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-card-tint bg-white px-4 sm:px-8">
       <div className="flex min-w-0 items-center gap-3">
@@ -43,49 +37,13 @@ export function TopBar({
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setOpen((value) => !value)}
-            className="flex items-center gap-2 rounded-full border border-card-tint px-3 py-1.5 text-sm font-medium text-surface-navy transition-colors hover:bg-page-bg"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />
-            {ROLE_LABEL[role]}
-            <ChevronDown className="h-3.5 w-3.5 text-neutral-text" />
-          </button>
-
-          {open ? (
-            <>
-              <button
-                type="button"
-                aria-label="Close role menu"
-                className="fixed inset-0 z-10 cursor-default"
-                onClick={() => setOpen(false)}
-              />
-              <div className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-lg border border-card-tint bg-white py-1 shadow-lg">
-                {ROLES.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => {
-                      onRoleChange(option);
-                      setOpen(false);
-                    }}
-                    className={cn(
-                      "flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-page-bg",
-                      option === role
-                        ? "font-semibold text-brand-blue"
-                        : "text-surface-navy",
-                    )}
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />
-                    {ROLE_LABEL[option]}
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : null}
-        </div>
+        {/* Real role, display-only — there is no control here to view the
+         * product as a different role than the signed-in session actually
+         * is. */}
+        <span className="flex items-center gap-2 rounded-full border border-card-tint px-3 py-1.5 text-sm font-medium text-surface-navy">
+          <span className="h-1.5 w-1.5 rounded-full bg-brand-blue" />
+          {ROLE_LABEL[role]}
+        </span>
 
         <button
           type="button"

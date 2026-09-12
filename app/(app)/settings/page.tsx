@@ -22,7 +22,7 @@ export default async function SettingsPage() {
   return (
     <AppShell
       title="Settings"
-      defaultRole={role}
+      role={role}
       user={displayUser ?? undefined}
     >
       <SettingsShell />

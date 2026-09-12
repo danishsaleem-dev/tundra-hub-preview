@@ -7,34 +7,24 @@ import type { Role, RoleUser } from "@/lib/roles";
 
 export interface AppShellProps {
   title: string;
-  defaultRole: Role;
-  /** Real signed-in identity for the sidebar footer. Only shown while
-   * viewing this role — switching to preview another role via TopBar falls
-   * back to that role's demo placeholder, since showing a real name under a
-   * role that isn't actually theirs would be misleading. */
+  /** The real signed-in user's actual role — the only source of truth for
+   * which nav items and dashboard content render. There is no client-side
+   * way to view this as any other role; a page that wants to show
+   * something different must be signed in as something different. */
+  role: Role;
+  /** Real signed-in identity for the sidebar footer. */
   user?: RoleUser;
-  /** Static body, used when the page doesn't vary by role. */
-  children?: ReactNode;
-  /** Role-keyed body — takes priority over `children` when the page has a distinct view per role. */
-  content?: Partial<Record<Role, ReactNode>>;
+  children: ReactNode;
 }
 
-export function AppShell({
-  title,
-  defaultRole,
-  user,
-  children,
-  content,
-}: AppShellProps) {
-  const [role, setRole] = useState<Role>(defaultRole);
+export function AppShell({ title, role, user, children }: AppShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const body = content ? (content[role] ?? children) : children;
 
   return (
     <div className="flex h-screen bg-page-bg">
       <NavShell
         role={role}
-        user={role === defaultRole ? user : undefined}
+        user={user}
         mobileOpen={mobileNavOpen}
         onMobileClose={() => setMobileNavOpen(false)}
       />
@@ -42,11 +32,10 @@ export function AppShell({
         <TopBar
           title={title}
           role={role}
-          onRoleChange={setRole}
           onMenuClick={() => setMobileNavOpen(true)}
         />
         <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-8 sm:py-6">
-          {body}
+          {children}
         </main>
       </div>
     </div>

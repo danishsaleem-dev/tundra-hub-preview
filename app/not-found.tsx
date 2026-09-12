@@ -1,31 +1,26 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { SearchX } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Panel } from "@/components/Panel";
-import { NAV_ITEMS, ROLES, type Role } from "@/lib/roles";
+import { getCurrentUser, getCurrentDisplayUser } from "@/lib/auth/current-user";
+import type { Role } from "@/lib/roles";
 
-function resolveRole(pathname: string): Role {
-  for (const role of ROLES) {
-    if (NAV_ITEMS[role].some((item) => item.href === pathname)) return role;
-  }
-  return "admin";
-}
+const ROLE_MAP: Record<string, Role> = {
+  ADMIN: "admin",
+  RECRUITER: "recruiter",
+  ATHLETE: "athlete",
+};
 
-function resolveLabel(pathname: string, role: Role): string {
-  const match = NAV_ITEMS[role].find((item) => item.href === pathname);
-  return match?.label ?? "Not Found";
-}
-
-export default function NotFound() {
-  const pathname = usePathname();
-  const role = resolveRole(pathname);
-  const title = resolveLabel(pathname, role);
+// A real server component, not a client-side pathname guess — the nav
+// sidebar and identity shown here come from the real signed-in session,
+// same as every other page, not a heuristic match against the URL.
+export default async function NotFound() {
+  const user = await getCurrentUser();
+  const displayUser = await getCurrentDisplayUser();
+  const role = (user ? ROLE_MAP[user.role] : undefined) ?? "admin";
 
   return (
-    <AppShell title={title} defaultRole={role}>
+    <AppShell title="Page Not Found" role={role} user={displayUser ?? undefined}>
       <Panel>
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <SearchX className="h-8 w-8 text-neutral-text" />

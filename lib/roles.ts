@@ -19,8 +19,6 @@ import { ENTITY_LABELS } from "@/lib/labels";
 
 export type Role = "admin" | "recruiter" | "athlete";
 
-export const ROLES: Role[] = ["admin", "recruiter", "athlete"];
-
 export interface NavItem {
   label: string;
   href: string;

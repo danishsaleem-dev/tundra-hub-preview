@@ -22,10 +22,10 @@ export default async function MyProfilePage() {
   const role = (user ? ROLE_MAP[user.role] : undefined) ?? "admin";
 
   // This page only ever renders real data for a real ATHLETE session with
-  // a linked record — reachable by anyone previewing the athlete nav via
-  // the role switcher (AppShell), so a non-athlete viewer gets a plain
-  // notice instead of the form attempting to fetch data their account
-  // has no athleteId to fetch.
+  // a linked record. It's not in a Recruiter or Admin's own nav, but the
+  // URL is still directly reachable, so a non-athlete visitor gets a
+  // plain notice instead of the form attempting to fetch data their
+  // account has no athleteId to fetch.
   const body =
     user?.role === "ATHLETE" && user.athleteId ? (
       <MyProfileForm athleteId={user.athleteId} />
@@ -39,7 +39,7 @@ export default async function MyProfilePage() {
     );
 
   return (
-    <AppShell title="My Profile" defaultRole={role} user={displayUser ?? undefined}>
+    <AppShell title="My Profile" role={role} user={displayUser ?? undefined}>
       {body}
     </AppShell>
   );

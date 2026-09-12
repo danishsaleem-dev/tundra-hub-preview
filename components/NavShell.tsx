@@ -14,7 +14,8 @@ import { PRODUCT_IDENTITY } from "@/lib/labels";
 export interface NavShellProps {
   role: Role;
   /** Real signed-in identity, when known. Falls back to the role's demo
-   * placeholder (e.g. on /style-guide, or when previewing another role). */
+   * placeholder on /style-guide, which renders NavShell standalone with
+   * no real session behind it. */
   user?: RoleUser;
   className?: string;
   /** Below the md breakpoint the sidebar is an off-canvas drawer instead
@@ -105,8 +106,8 @@ export function NavShell({
             <p className="text-xs text-slate-400">{user.subtitle}</p>
           </div>
           {/* Only the real signed-in user (userOverride set) gets a sign-out
-           * control — style-guide demos and role-preview placeholders have no
-           * session to sign out of. */}
+           * control — the style-guide demo has no real session to sign out
+           * of. */}
           {userOverride ? (
             <SignOutButton>
               <button

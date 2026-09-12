@@ -38,7 +38,7 @@ export default async function ProspectsPage() {
   return (
     <AppShell
       title={ENTITY_LABELS.prospect.plural}
-      defaultRole={role}
+      role={role}
       user={displayUser ?? undefined}
     >
       {body}

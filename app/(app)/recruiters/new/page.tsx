@@ -37,7 +37,7 @@ export default async function NewRecruiterPage() {
   return (
     <AppShell
       title={`New ${ENTITY_LABELS.recruiter.singular}`}
-      defaultRole={role}
+      role={role}
       user={displayUser ?? undefined}
     >
       {body}

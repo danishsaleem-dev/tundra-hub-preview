@@ -39,7 +39,7 @@ export default async function RecruitersPage() {
   return (
     <AppShell
       title={ENTITY_LABELS.recruiter.plural}
-      defaultRole={role}
+      role={role}
       user={displayUser ?? undefined}
     >
       {body}
