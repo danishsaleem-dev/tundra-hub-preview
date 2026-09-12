@@ -13,6 +13,7 @@ import {
   Settings,
   FileText,
   CircleUser,
+  UserCog,
 } from "lucide-react";
 import { ENTITY_LABELS } from "@/lib/labels";
 
@@ -39,6 +40,7 @@ export const NAV_ITEMS: Record<Role, NavItem[]> = {
     { label: ENTITY_LABELS.athlete.plural, href: "/athletes", icon: Users },
     { label: ENTITY_LABELS.prospect.plural, href: "/prospects", icon: Search },
     { label: ENTITY_LABELS.nilDeal.plural, href: "/nil-deals", icon: Handshake },
+    { label: ENTITY_LABELS.recruiter.plural, href: "/recruiters", icon: UserCog },
     { label: "Tasks", href: "/tasks", icon: CheckSquare },
     { label: "Compliance", href: "/compliance", icon: ShieldCheck },
     { label: "Documents", href: "/documents", icon: Folder },

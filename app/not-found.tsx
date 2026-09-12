@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Construction } from "lucide-react";
+import { SearchX } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Panel } from "@/components/Panel";
 import { NAV_ITEMS, ROLES, type Role } from "@/lib/roles";
@@ -28,14 +28,12 @@ export default function NotFound() {
     <AppShell title={title} defaultRole={role}>
       <Panel>
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <Construction className="h-8 w-8 text-neutral-text" />
-          <p className="text-lg font-bold text-surface-navy">
-            Not built in this preview
-          </p>
+          <SearchX className="h-8 w-8 text-neutral-text" />
+          <p className="text-lg font-bold text-surface-navy">Page not found</p>
           <p className="max-w-sm text-sm text-neutral-text">
-            This screen isn&apos;t wired up yet — the Dashboard and Style
-            Guide are the two fully assembled reference screens. Everything
-            else in the sidebar is a placeholder route.
+            This page doesn&apos;t exist, or you don&apos;t have access to
+            it — either because it hasn&apos;t been built yet, or because
+            the record it points to isn&apos;t one you can see.
           </p>
           <Link
             href="/dashboard"

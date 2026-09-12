@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { RecruiterStatus, type Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError, parseListParams } from "@/lib/api/http";
@@ -15,14 +16,26 @@ export async function GET(request: NextRequest) {
 
   const { skip, take, includeArchived } = parseListParams(request.nextUrl);
 
+  const statusParam = request.nextUrl.searchParams.get("status");
+  const isValidStatus = statusParam !== null && statusParam in RecruiterStatus;
+  const stateFocusParam = request.nextUrl.searchParams.get("stateFocus");
+
+  const where: Prisma.RecruiterWhereInput = {
+    ...(includeArchived ? {} : { archived: false }),
+    ...(isValidStatus ? { status: statusParam as RecruiterStatus } : {}),
+    ...(stateFocusParam
+      ? { stateFocus: { contains: stateFocusParam, mode: "insensitive" } }
+      : {}),
+  };
+
   const [recruiters, total] = await Promise.all([
     prisma.recruiter.findMany({
-      where: includeArchived ? {} : { archived: false },
+      where,
       orderBy: { createdAt: "desc" },
       skip,
       take,
     }),
-    prisma.recruiter.count({ where: includeArchived ? {} : { archived: false } }),
+    prisma.recruiter.count({ where }),
   ]);
 
   return NextResponse.json({ recruiters, total, skip, take });
