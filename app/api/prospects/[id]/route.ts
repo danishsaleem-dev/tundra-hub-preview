@@ -6,6 +6,15 @@ import { prospectUpdateSchema } from "@/lib/validation/prospect";
 import { toProspectPrismaData } from "@/lib/prospect-data";
 import { logAudit } from "@/lib/audit-log";
 
+// Same flattening as GET /api/prospects — the detail view needs a human
+// recruiter name, not a raw recruiterId.
+function withRecruiterName<T extends { recruiter: { name: string } | null }>(
+  record: T,
+): Omit<T, "recruiter"> & { recruiterName: string | null } {
+  const { recruiter, ...rest } = record;
+  return { ...rest, recruiterName: recruiter?.name ?? null };
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -20,19 +29,25 @@ export async function GET(
   // M5's retrievability requirement. The list route is the only place
   // that hides archived records by default.
   if (user.role === "ADMIN") {
-    const prospect = await prisma.prospect.findUnique({ where: { id } });
+    const prospect = await prisma.prospect.findUnique({
+      where: { id },
+      include: { recruiter: { select: { name: true } } },
+    });
     if (!prospect) return jsonError("Not found", 404);
-    return NextResponse.json({ prospect });
+    return NextResponse.json({ prospect: withRecruiterName(prospect) });
   }
 
   if (user.role === "RECRUITER") {
-    const prospect = await prisma.prospect.findUnique({ where: { id } });
+    const prospect = await prisma.prospect.findUnique({
+      where: { id },
+      include: { recruiter: { select: { name: true } } },
+    });
     // Not found OR not this recruiter's prospect — both 404, same masking
     // pattern as the Athlete route.
     if (!prospect || prospect.recruiterId !== user.recruiterId) {
       return jsonError("Not found", 404);
     }
-    return NextResponse.json({ prospect });
+    return NextResponse.json({ prospect: withRecruiterName(prospect) });
   }
 
   return jsonError("Forbidden", 403);
@@ -66,6 +81,7 @@ export async function PATCH(
   const prospect = await prisma.prospect.update({
     where: { id },
     data: toProspectPrismaData(result.data),
+    include: { recruiter: { select: { name: true } } },
   });
 
   await logAudit({
@@ -77,5 +93,5 @@ export async function PATCH(
     after: prospect,
   });
 
-  return NextResponse.json({ prospect });
+  return NextResponse.json({ prospect: withRecruiterName(prospect) });
 }
