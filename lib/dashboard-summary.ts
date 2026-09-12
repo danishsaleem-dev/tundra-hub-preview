@@ -1,5 +1,5 @@
 import "server-only";
-import { Prisma, type ContractStatus } from "@prisma/client";
+import { Prisma, type ContractStatus, type PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withComputedPaymentFieldsList } from "@/lib/payment-computed";
 
@@ -99,4 +99,64 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
       overdueTotalAmount,
     },
   };
+}
+
+export interface PaymentHealthItem {
+  id: string;
+  paymentName: string;
+  brandName: string | null;
+  athleteName: string;
+  amountOutstanding: string;
+  paymentAmount: string;
+  status: PaymentStatus;
+  isOverdue: boolean;
+  dueDate: string | null;
+}
+
+// The dashboard's "Payment Health" panel — a real, small, at-a-glance
+// slice of Payments, not the full list (that's the real Payments module's
+// job once it exists). Ordered by dueDate ascending (soonest-due first,
+// nulls last) so what needs attention soonest surfaces first, same
+// isOverdue/amountOutstanding definition as everywhere else
+// (withComputedPaymentFieldsList), not a separate reimplementation.
+//
+// null recruiterId = unscoped (admin sees everything), matching the same
+// scoping shape getActivityFeed() already uses — there's no
+// Recruiter-facing Payment Health panel yet to call this with a real
+// recruiterId (Recruiter's own dashboard has no payments panel at all),
+// but the function is scoped correctly now rather than needing a rewrite
+// whenever that panel gets built.
+export async function getPaymentHealthList(
+  scope: { recruiterId: string | null },
+  limit = 6,
+): Promise<PaymentHealthItem[]> {
+  const recruiterScope = scope.recruiterId;
+
+  const payments = await prisma.payment.findMany({
+    where: {
+      archived: false,
+      ...(recruiterScope
+        ? { nilDeal: { athlete: { recruiterId: recruiterScope } } }
+        : {}),
+    },
+    orderBy: { dueDate: { sort: "asc", nulls: "last" } },
+    take: limit,
+    include: {
+      nilDeal: {
+        select: { brandName: true, athlete: { select: { athleteName: true } } },
+      },
+    },
+  });
+
+  return withComputedPaymentFieldsList(payments).map((payment) => ({
+    id: payment.id,
+    paymentName: payment.paymentName,
+    brandName: payment.nilDeal.brandName,
+    athleteName: payment.nilDeal.athlete.athleteName,
+    amountOutstanding: payment.amountOutstanding,
+    paymentAmount: payment.paymentAmount.toFixed(2),
+    status: payment.status,
+    isOverdue: payment.isOverdue,
+    dueDate: payment.dueDate ? payment.dueDate.toISOString() : null,
+  }));
 }

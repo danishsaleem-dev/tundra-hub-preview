@@ -1,117 +1,29 @@
-import { Sparkles } from "lucide-react";
+import { Sparkles, ListTodo } from "lucide-react";
 import { AlertBanner } from "@/components/AlertBanner";
 import { KpiCard } from "@/components/KpiCard";
 import { Panel } from "@/components/Panel";
 import { StatusChip } from "@/components/StatusChip";
 import { ListRow } from "@/components/ListRow";
 import { ActivityItem } from "@/components/ActivityItem";
+import { EmptyState } from "@/components/EmptyState";
 import type { StatusVariant } from "@/lib/status";
-import type { DashboardSummary } from "@/lib/dashboard-summary";
+import type { DashboardSummary, PaymentHealthItem } from "@/lib/dashboard-summary";
 import type { ActivityItem as ActivityFeedItem } from "@/lib/activity-feed";
 import { formatCurrency, formatRelativeTime } from "@/lib/format";
 import { ENTITY_LABELS } from "@/lib/labels";
 
-interface PaymentRow {
+// Overdue (computed, same isOverdue every other panel on this dashboard
+// already uses) always wins the chip regardless of the stored status —
+// an overdue PARTIAL payment is still, first and foremost, overdue.
+function paymentHealthChip(payment: PaymentHealthItem): {
+  variant: StatusVariant;
   label: string;
-  brand: string;
-  amount: string;
-  status: StatusVariant;
-  statusLabel: string;
+} {
+  if (payment.isOverdue) return { variant: "critical", label: "Overdue" };
+  if (payment.status === "PAID") return { variant: "success", label: "Paid" };
+  if (payment.status === "PARTIAL") return { variant: "warning", label: "Partial" };
+  return { variant: "neutral", label: "Pending" };
 }
-
-const PAYMENTS: PaymentRow[] = [
-  {
-    label: "Velocity Apparel – Q1 Payment",
-    brand: "Velocity Apparel · Caleb Fontaine",
-    amount: "$4,500",
-    status: "success",
-    statusLabel: "Paid",
-  },
-  {
-    label: "Velocity Apparel – Q2 Payment",
-    brand: "Velocity Apparel · Caleb Fontaine",
-    amount: "$4,500",
-    status: "critical",
-    statusLabel: "Overdue",
-  },
-  {
-    label: "Glacier Energy – April Installment",
-    brand: "Glacier Energy Drinks · Marcus Bellamy",
-    amount: "$8,000",
-    status: "critical",
-    statusLabel: "Overdue",
-  },
-  {
-    label: "Champion's Table – Q1 Payment",
-    brand: "Champion's Table Restaurant · Caleb Fontaine",
-    amount: "$3,500",
-    status: "success",
-    statusLabel: "Paid",
-  },
-  {
-    label: "ProEdge Training – Kickoff Payment",
-    brand: "ProEdge Training Center · Trevon Garris",
-    amount: "$6,500",
-    status: "neutral",
-    statusLabel: "Pending",
-  },
-  {
-    label: "Champion's Table – Q2 Payment",
-    brand: "Champion's Table Restaurant · Caleb Fontaine",
-    amount: "$3,500",
-    status: "warning",
-    statusLabel: "Due Soon",
-  },
-];
-
-interface TaskRow {
-  title: string;
-  priority: StatusVariant;
-  priorityLabel: string;
-  owner: string;
-  due: string;
-  overdue?: boolean;
-}
-
-const TASKS: TaskRow[] = [
-  {
-    title: "Follow up with Velocity Apparel on overdue Q2 payment",
-    priority: "critical",
-    priorityLabel: "Critical",
-    owner: "Marcus Webb",
-    due: "Overdue",
-    overdue: true,
-  },
-  {
-    title: "Collect Glacier Energy overdue April payment",
-    priority: "critical",
-    priorityLabel: "Critical",
-    owner: "Darnell Okafor",
-    due: "Overdue",
-    overdue: true,
-  },
-  {
-    title: "Get disclosure form from Trevon Garris (ProEdge deal)",
-    priority: "warning",
-    priorityLabel: "High",
-    owner: "Jordan Pierce",
-    due: "Due 2026-05-22",
-  },
-  {
-    title: "Send ProEdge contract to Trevon Garris for signature",
-    priority: "warning",
-    priorityLabel: "High",
-    owner: "Jordan Pierce",
-    due: "Due 2026-05-23",
-  },
-  {
-    title: "Review representation agreement draft for DeShawn Tillery",
-    priority: "warning",
-    priorityLabel: "High",
-    owner: "Jordan Pierce",
-    due: "Due 2026-05-25",
-  },
-];
 
 interface ComplianceRow {
   title: string;
@@ -215,11 +127,13 @@ function describeActivity(item: ActivityFeedItem): string {
 export interface AdminDashboardContentProps {
   summary: DashboardSummary;
   activity: ActivityFeedItem[];
+  paymentHealth: PaymentHealthItem[];
 }
 
 export function AdminDashboardContent({
   summary,
   activity,
+  paymentHealth,
 }: AdminDashboardContentProps) {
   const totalDealsTracked = Object.values(summary.nilDeals.breakdownByStatus).reduce(
     (a, b) => a + b,
@@ -279,85 +193,52 @@ export function AdminDashboardContent({
 
       <div className="grid items-start gap-4 lg:grid-cols-3">
         <Panel title="Payment Health">
-          <ul className="divide-y divide-card-tint">
-            {PAYMENTS.map((payment) => (
-              <ListRow
-                key={payment.label}
-                title={payment.label}
-                meta={payment.brand}
-                trailing={
-                  <>
-                    <span className="text-sm font-semibold text-surface-navy">
-                      {payment.amount}
-                    </span>
-                    <StatusChip
-                      variant={payment.status}
-                      label={payment.statusLabel}
-                    />
-                  </>
-                }
-              />
-            ))}
-          </ul>
+          {paymentHealth.length === 0 ? (
+            <EmptyState
+              icon={ListTodo}
+              title={`No ${ENTITY_LABELS.payment.plural.toLowerCase()} yet`}
+              description={`${ENTITY_LABELS.payment.plural} will show up here once they exist.`}
+            />
+          ) : (
+            <ul className="divide-y divide-card-tint">
+              {paymentHealth.map((payment) => {
+                const chip = paymentHealthChip(payment);
+                return (
+                  <ListRow
+                    key={payment.id}
+                    title={payment.paymentName}
+                    meta={[payment.brandName, payment.athleteName]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    trailing={
+                      <>
+                        <span className="text-sm font-semibold text-surface-navy">
+                          {formatCurrency(payment.amountOutstanding)}
+                        </span>
+                        <StatusChip variant={chip.variant} label={chip.label} />
+                      </>
+                    }
+                  />
+                );
+              })}
+            </ul>
+          )}
         </Panel>
 
         <Panel title="Priority Actions">
-          <ul className="divide-y divide-card-tint">
-            {TASKS.map((task) => (
-              <ListRow
-                key={task.title}
-                title={task.title}
-                meta={`→ ${task.owner}`}
-                accent={task.priority}
-                trailing={
-                  <>
-                    <StatusChip
-                      variant={task.priority}
-                      label={task.priorityLabel}
-                    />
-                    <span
-                      className={
-                        task.overdue
-                          ? "text-xs font-medium text-critical-text"
-                          : "text-xs text-neutral-text"
-                      }
-                    >
-                      {task.due}
-                    </span>
-                  </>
-                }
-              />
-            ))}
-          </ul>
+          <EmptyState
+            icon={ListTodo}
+            title="No tasks yet"
+            description="Task tracking isn't built yet — this becomes available once the Tasks module ships."
+          />
         </Panel>
 
-        <Panel title="AI Executive Briefing" icon={Sparkles} tone="dark">
-          <div className="space-y-2.5 text-xs leading-relaxed text-slate-300">
-            <p>
-              <span className="font-semibold text-white">Revenue Risk:</span>{" "}
-              Two overdue payments totaling{" "}
-              <span className="font-semibold text-critical-text">
-                $12,500
-              </span>{" "}
-              require immediate follow-up. Glacier Energy is 48 days past
-              invoice — escalation recommended.
-            </p>
-            <p>
-              <span className="font-semibold text-white">
-                Compliance Hold:
-              </span>{" "}
-              Trevon Garris&apos;s ProEdge deal is blocked pending disclosure
-              form. Risk to $6,500 if not cleared before May 25.
-            </p>
-            <p>
-              <span className="font-semibold text-white">Pipeline:</span>{" "}
-              Quinton Hargrove (#4 national safety) and Isaiah Drummond (#12
-              national QB) are in final stages. Close both this week.
-            </p>
-          </div>
-          <p className="mt-3 border-t border-white/10 pt-2.5 text-[11px] text-slate-500">
-            MOCK AI OUTPUT · Tundra Intelligence v1 · Updated May 19, 2026
-          </p>
+        <Panel title="AI Executive Briefing" icon={Sparkles}>
+          <EmptyState
+            icon={Sparkles}
+            title="AI insights not yet available"
+            description="Executive briefing generation isn't built yet — this becomes available once it ships."
+          />
         </Panel>
       </div>
 

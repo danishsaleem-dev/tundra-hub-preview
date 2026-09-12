@@ -3,6 +3,7 @@ import { KpiCard } from "@/components/KpiCard";
 import { Panel } from "@/components/Panel";
 import { StatusChip } from "@/components/StatusChip";
 import { ListRow } from "@/components/ListRow";
+import { EmptyState } from "@/components/EmptyState";
 import type { StatusVariant } from "@/lib/status";
 
 interface DealRow {
@@ -57,8 +58,6 @@ const COMPLIANCE: ComplianceRow[] = [
     statusLabel: "Pending",
   },
 ];
-
-const QUICK_ACTIONS = ["What do I owe?", "Deal timeline", "My documents"];
 
 export function AthleteDashboardContent() {
   return (
@@ -145,26 +144,12 @@ export function AthleteDashboardContent() {
           </ul>
         </Panel>
 
-        <Panel title="Tundra Assistant" icon={Sparkles} tone="dark">
-          <p className="text-xs leading-relaxed text-slate-300">
-            Your Q2 Velocity payment of $4,500 is overdue. Your agent has
-            been notified and is following up with the brand. No action
-            required from you.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {QUICK_ACTIONS.map((action) => (
-              <button
-                key={action}
-                type="button"
-                className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 transition-colors hover:bg-white/15"
-              >
-                {action}
-              </button>
-            ))}
-          </div>
-          <p className="mt-3 border-t border-white/10 pt-2.5 text-[11px] text-slate-500">
-            MOCK AI ASSISTANT · Not a real integration
-          </p>
+        <Panel title="Tundra Assistant" icon={Sparkles}>
+          <EmptyState
+            icon={Sparkles}
+            title="Assistant not yet available"
+            description="A real assistant isn't built yet — this becomes available once it ships."
+          />
         </Panel>
       </div>
 

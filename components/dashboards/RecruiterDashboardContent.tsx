@@ -1,40 +1,10 @@
-import { Sparkles } from "lucide-react";
+import { Sparkles, ListTodo } from "lucide-react";
 import { KpiCard } from "@/components/KpiCard";
 import { Panel } from "@/components/Panel";
 import { StatusChip } from "@/components/StatusChip";
-import { ListRow } from "@/components/ListRow";
+import { EmptyState } from "@/components/EmptyState";
 import { DataTable, type Column } from "@/components/DataTable";
 import type { StatusVariant } from "@/lib/status";
-
-interface TaskRow {
-  title: string;
-  priority: StatusVariant;
-  priorityLabel: string;
-  due: string;
-  overdue?: boolean;
-}
-
-const TASKS: TaskRow[] = [
-  {
-    title: "Follow up with Velocity Apparel on overdue Q2 payment",
-    priority: "critical",
-    priorityLabel: "Critical",
-    due: "Overdue",
-    overdue: true,
-  },
-  {
-    title: "Review representation agreement draft for DeShawn Tillery",
-    priority: "warning",
-    priorityLabel: "High",
-    due: "Due 2026-05-24",
-  },
-  {
-    title: "Send contract to Isaiah Drummond",
-    priority: "warning",
-    priorityLabel: "High",
-    due: "Due 2026-05-22",
-  },
-];
 
 interface ProspectRow {
   prospect: string;
@@ -146,59 +116,20 @@ export function RecruiterDashboardContent() {
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-2">
-        <Panel title="AI Prospect Summary" icon={Sparkles} tone="dark">
-          <div className="space-y-2.5 text-xs leading-relaxed text-slate-300">
-            <p>
-              <span className="font-semibold text-white">
-                Isaiah Drummond —
-              </span>{" "}
-              Contract ready to send. Family aligned, no competing offers
-              known. Close this week.
-            </p>
-            <p>
-              <span className="font-semibold text-white">Cameron Osei —</span>{" "}
-              Warm. Proposal sent May 14. Follow up with brand offer detail
-              to move to contract.
-            </p>
-            <p>
-              <span className="font-semibold text-white">
-                Your pipeline health:
-              </span>{" "}
-              2 hot, 1 warm, 0 cold. On track for monthly close target.
-            </p>
-          </div>
-          <p className="mt-3 border-t border-white/10 pt-2.5 text-[11px] text-slate-500">
-            MOCK AI · Tundra Recruiter Intelligence
-          </p>
+        <Panel title="AI Prospect Summary" icon={Sparkles}>
+          <EmptyState
+            icon={Sparkles}
+            title="AI insights not yet available"
+            description="Prospect summary generation isn't built yet — this becomes available once it ships."
+          />
         </Panel>
 
         <Panel title="My Open Tasks">
-          <ul className="divide-y divide-card-tint">
-            {TASKS.map((task) => (
-              <ListRow
-                key={task.title}
-                title={task.title}
-                accent={task.priority}
-                trailing={
-                  <>
-                    <StatusChip
-                      variant={task.priority}
-                      label={task.priorityLabel}
-                    />
-                    <span
-                      className={
-                        task.overdue
-                          ? "text-xs font-medium text-critical-text"
-                          : "text-xs text-neutral-text"
-                      }
-                    >
-                      {task.due}
-                    </span>
-                  </>
-                }
-              />
-            ))}
-          </ul>
+          <EmptyState
+            icon={ListTodo}
+            title="No tasks yet"
+            description="Task tracking isn't built yet — this becomes available once the Tasks module ships."
+          />
         </Panel>
       </div>
 

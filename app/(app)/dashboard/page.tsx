@@ -5,7 +5,7 @@ import { RecruiterDashboardContent } from "@/components/dashboards/RecruiterDash
 import { AthleteDashboardContent } from "@/components/dashboards/AthleteDashboardContent";
 import { Panel } from "@/components/Panel";
 import { getCurrentUser, getCurrentDisplayUser } from "@/lib/auth/current-user";
-import { getDashboardSummary } from "@/lib/dashboard-summary";
+import { getDashboardSummary, getPaymentHealthList } from "@/lib/dashboard-summary";
 import { getActivityFeed } from "@/lib/activity-feed";
 import type { Role } from "@/lib/roles";
 
@@ -36,6 +36,7 @@ export default async function DashboardPage() {
       <AdminDashboardContent
         summary={await getDashboardSummary()}
         activity={await getActivityFeed({ recruiterId: null })}
+        paymentHealth={await getPaymentHealthList({ recruiterId: null })}
       />
     ) : (
       <Panel title="Admin Dashboard">
