@@ -1,7 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { Position, RecruitingStatus, type Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-import { jsonError, jsonValidationError, parseListParams } from "@/lib/api/http";
+import {
+  jsonError,
+  jsonValidationError,
+  parseListParams,
+  withRecruiterName,
+} from "@/lib/api/http";
 import { athleteCreateSchema } from "@/lib/validation/athlete";
 import {
   ADMIN_ATHLETE_INCLUDE,
@@ -10,6 +16,18 @@ import {
 } from "@/lib/athlete-select";
 import { logAudit } from "@/lib/audit-log";
 
+// A list view never needs the sensitiveInfo relation, regardless of role
+// — showing a table of rows is exactly the "information density" risk
+// that data must never be part of. Only the single-record route (where
+// the detail page's dedicated sensitive-info section actually uses it)
+// fetches that relation; the list route uses this same non-sensitive
+// shape for ADMIN and RECRUITER alike, with the recruiter's name resolved
+// for the "assigned recruiter" column.
+const LIST_SELECT = {
+  ...NON_ADMIN_ATHLETE_SELECT,
+  recruiter: { select: { name: true } },
+} satisfies Prisma.AthleteSelect;
+
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return jsonError("Unauthorized", 401);
@@ -17,40 +35,56 @@ export async function GET(request: NextRequest) {
   const { skip, take, includeArchived } = parseListParams(request.nextUrl);
   const archivedFilter = includeArchived ? {} : { archived: false };
 
-  if (user.role === "ADMIN") {
-    // A list view never needs the sensitiveInfo relation, regardless of
-    // role — showing a table of rows is exactly the "information
-    // density" risk that data must never be part of. Only the
-    // single-record route (where the detail page's dedicated
-    // sensitive-info section actually uses it) fetches that relation.
-    const [athletes, total] = await Promise.all([
-      prisma.athlete.findMany({
-        where: archivedFilter,
-        select: NON_ADMIN_ATHLETE_SELECT,
-        orderBy: { createdAt: "desc" },
-        skip,
-        take,
-      }),
-      prisma.athlete.count({ where: archivedFilter }),
-    ]);
-    return NextResponse.json({ athletes, total, skip, take });
-  }
+  const positionParam = request.nextUrl.searchParams.get("position");
+  const isValidPosition = positionParam !== null && positionParam in Position;
+  const statusParam = request.nextUrl.searchParams.get("currentRecruitingStatus");
+  const isValidStatus = statusParam !== null && statusParam in RecruitingStatus;
 
-  if (user.role === "RECRUITER") {
-    // Scoped to athletes this recruiter is actually assigned to — never
-    // the full roster, and never the sensitive-info relation.
-    const where = { ...archivedFilter, recruiterId: user.recruiterId };
+  const filters: Prisma.AthleteWhereInput = {
+    ...(isValidPosition ? { position: positionParam as Position } : {}),
+    ...(isValidStatus ? { currentRecruitingStatus: statusParam as RecruitingStatus } : {}),
+  };
+
+  if (user.role === "ADMIN") {
+    const where = { ...archivedFilter, ...filters };
     const [athletes, total] = await Promise.all([
       prisma.athlete.findMany({
         where,
-        select: NON_ADMIN_ATHLETE_SELECT,
+        select: LIST_SELECT,
         orderBy: { createdAt: "desc" },
         skip,
         take,
       }),
       prisma.athlete.count({ where }),
     ]);
-    return NextResponse.json({ athletes, total, skip, take });
+    return NextResponse.json({
+      athletes: athletes.map(withRecruiterName),
+      total,
+      skip,
+      take,
+    });
+  }
+
+  if (user.role === "RECRUITER") {
+    // Scoped to athletes this recruiter is actually assigned to — never
+    // the full roster, and never the sensitive-info relation.
+    const where = { ...archivedFilter, ...filters, recruiterId: user.recruiterId };
+    const [athletes, total] = await Promise.all([
+      prisma.athlete.findMany({
+        where,
+        select: LIST_SELECT,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take,
+      }),
+      prisma.athlete.count({ where }),
+    ]);
+    return NextResponse.json({
+      athletes: athletes.map(withRecruiterName),
+      total,
+      skip,
+      take,
+    });
   }
 
   return jsonError("Forbidden", 403);

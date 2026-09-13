@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-import { jsonError, jsonValidationError } from "@/lib/api/http";
+import { jsonError, jsonValidationError, withRecruiterName } from "@/lib/api/http";
 import { humanizeFieldName } from "@/lib/format";
 import { logAudit } from "@/lib/audit-log";
 import {
@@ -17,6 +18,12 @@ import {
 const SELF_EDITABLE_SHAPE = Object.fromEntries(
   ATHLETE_SELF_EDITABLE_FIELDS.map((field) => [field, true]),
 ) as Record<(typeof ATHLETE_SELF_EDITABLE_FIELDS)[number], true>;
+
+// Adds the recruiter's name alongside whichever sensitive-info shaping
+// (or lack of it) the caller's role already earned — a purely additive
+// display convenience, not a second RBAC decision. Used for both the
+// ADMIN_ATHLETE_INCLUDE and NON_ADMIN_ATHLETE_SELECT shapes below.
+const WITH_RECRUITER = { recruiter: { select: { name: true } } } satisfies Prisma.AthleteInclude;
 
 export async function GET(
   _request: Request,
@@ -34,10 +41,10 @@ export async function GET(
   if (user.role === "ADMIN") {
     const athlete = await prisma.athlete.findUnique({
       where: { id },
-      include: ADMIN_ATHLETE_INCLUDE,
+      include: { ...ADMIN_ATHLETE_INCLUDE, ...WITH_RECRUITER },
     });
     if (!athlete) return jsonError("Not found", 404);
-    return NextResponse.json({ athlete });
+    return NextResponse.json({ athlete: withRecruiterName(athlete) });
   }
 
   if (user.role === "RECRUITER") {
@@ -45,14 +52,14 @@ export async function GET(
     // cannot come back regardless of what this athlete's data contains.
     const athlete = await prisma.athlete.findUnique({
       where: { id },
-      select: NON_ADMIN_ATHLETE_SELECT,
+      select: { ...NON_ADMIN_ATHLETE_SELECT, ...WITH_RECRUITER },
     });
     // Not found OR not this recruiter's athlete — both 404, so a
     // recruiter can't distinguish "doesn't exist" from "not yours".
     if (!athlete || athlete.recruiterId !== user.recruiterId) {
       return jsonError("Not found", 404);
     }
-    return NextResponse.json({ athlete });
+    return NextResponse.json({ athlete: withRecruiterName(athlete) });
   }
 
   if (user.role === "ATHLETE") {
@@ -63,10 +70,10 @@ export async function GET(
     if (user.athleteId !== id) return jsonError("Not found", 404);
     const athlete = await prisma.athlete.findUnique({
       where: { id },
-      select: NON_ADMIN_ATHLETE_SELECT,
+      select: { ...NON_ADMIN_ATHLETE_SELECT, ...WITH_RECRUITER },
     });
     if (!athlete) return jsonError("Not found", 404);
-    return NextResponse.json({ athlete });
+    return NextResponse.json({ athlete: withRecruiterName(athlete) });
   }
 
   return jsonError("Forbidden", 403);
@@ -100,14 +107,14 @@ export async function PATCH(
     // "change" into this general log, which must never happen.
     const existing = await prisma.athlete.findUnique({
       where: { id },
-      include: ADMIN_ATHLETE_INCLUDE,
+      include: { ...ADMIN_ATHLETE_INCLUDE, ...WITH_RECRUITER },
     });
     if (!existing) return jsonError("Not found", 404);
 
     const athlete = await prisma.athlete.update({
       where: { id },
       data: toAthletePrismaData(result.data),
-      include: ADMIN_ATHLETE_INCLUDE,
+      include: { ...ADMIN_ATHLETE_INCLUDE, ...WITH_RECRUITER },
     });
 
     await logAudit({
@@ -119,7 +126,7 @@ export async function PATCH(
       after: athlete,
     });
 
-    return NextResponse.json({ athlete });
+    return NextResponse.json({ athlete: withRecruiterName(athlete) });
   }
 
   // ATHLETE: own record only, self-editable fields only.
@@ -144,14 +151,14 @@ export async function PATCH(
   // audit diff below would log those as false "changed to null" entries.
   const existing = await prisma.athlete.findUnique({
     where: { id },
-    select: NON_ADMIN_ATHLETE_SELECT,
+    select: { ...NON_ADMIN_ATHLETE_SELECT, ...WITH_RECRUITER },
   });
   if (!existing) return jsonError("Not found", 404);
 
   const athlete = await prisma.athlete.update({
     where: { id },
     data: toAthletePrismaData(result.data),
-    select: NON_ADMIN_ATHLETE_SELECT,
+    select: { ...NON_ADMIN_ATHLETE_SELECT, ...WITH_RECRUITER },
   });
 
   await logAudit({
@@ -163,5 +170,5 @@ export async function PATCH(
     after: athlete,
   });
 
-  return NextResponse.json({ athlete });
+  return NextResponse.json({ athlete: withRecruiterName(athlete) });
 }

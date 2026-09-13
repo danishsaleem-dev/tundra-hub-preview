@@ -41,3 +41,14 @@ export function parseListParams(url: URL): ListParams {
     includeArchived: url.searchParams.get("includeArchived") === "true",
   };
 }
+
+// Flattens a `recruiter: { name } | null` relation to a display name —
+// every module whose list/detail view needs a human recruiter name
+// instead of a raw recruiterId shapes its response through this, so
+// there's one flattening rule, not one per route.
+export function withRecruiterName<T extends { recruiter: { name: string } | null }>(
+  record: T,
+): Omit<T, "recruiter"> & { recruiterName: string | null } {
+  const { recruiter, ...rest } = record;
+  return { ...rest, recruiterName: recruiter?.name ?? null };
+}

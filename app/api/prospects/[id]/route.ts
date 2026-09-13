@@ -1,19 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-import { jsonError, jsonValidationError } from "@/lib/api/http";
+import { jsonError, jsonValidationError, withRecruiterName } from "@/lib/api/http";
 import { prospectUpdateSchema } from "@/lib/validation/prospect";
 import { toProspectPrismaData } from "@/lib/prospect-data";
 import { logAudit } from "@/lib/audit-log";
-
-// Same flattening as GET /api/prospects — the detail view needs a human
-// recruiter name, not a raw recruiterId.
-function withRecruiterName<T extends { recruiter: { name: string } | null }>(
-  record: T,
-): Omit<T, "recruiter"> & { recruiterName: string | null } {
-  const { recruiter, ...rest } = record;
-  return { ...rest, recruiterName: recruiter?.name ?? null };
-}
 
 export async function GET(
   _request: Request,

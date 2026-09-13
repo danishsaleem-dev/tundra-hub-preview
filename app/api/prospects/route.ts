@@ -2,21 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ProspectStatus, Tier, type Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-import { jsonError, jsonValidationError, parseListParams } from "@/lib/api/http";
+import {
+  jsonError,
+  jsonValidationError,
+  parseListParams,
+  withRecruiterName,
+} from "@/lib/api/http";
 import { prospectCreateSchema } from "@/lib/validation/prospect";
 import { toProspectPrismaData } from "@/lib/prospect-data";
 import { logAudit } from "@/lib/audit-log";
-
-// Flattens the recruiter relation to a display name — the list/detail UI
-// needs a human name, not a raw recruiterId, and this is the one place
-// that resolves it so both the list and single-record routes shape their
-// response the same way.
-function withRecruiterName<T extends { recruiter: { name: string } | null }>(
-  record: T,
-): Omit<T, "recruiter"> & { recruiterName: string | null } {
-  const { recruiter, ...rest } = record;
-  return { ...rest, recruiterName: recruiter?.name ?? null };
-}
 
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
