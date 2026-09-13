@@ -18,10 +18,15 @@ export async function GET(request: NextRequest) {
   const archivedFilter = includeArchived ? {} : { archived: false };
 
   if (user.role === "ADMIN") {
+    // A list view never needs the sensitiveInfo relation, regardless of
+    // role — showing a table of rows is exactly the "information
+    // density" risk that data must never be part of. Only the
+    // single-record route (where the detail page's dedicated
+    // sensitive-info section actually uses it) fetches that relation.
     const [athletes, total] = await Promise.all([
       prisma.athlete.findMany({
         where: archivedFilter,
-        include: ADMIN_ATHLETE_INCLUDE,
+        select: NON_ADMIN_ATHLETE_SELECT,
         orderBy: { createdAt: "desc" },
         skip,
         take,
