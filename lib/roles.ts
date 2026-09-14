@@ -50,6 +50,8 @@ export const NAV_ITEMS: Record<Role, NavItem[]> = {
     { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
     { label: ENTITY_LABELS.prospect.plural, href: "/prospects", icon: Search },
     { label: ENTITY_LABELS.athlete.plural, href: "/athletes", icon: Users },
+    { label: ENTITY_LABELS.nilDeal.plural, href: "/nil-deals", icon: Handshake },
+    { label: ENTITY_LABELS.payment.plural, href: "/payments", icon: CreditCard },
     { label: "Tasks", href: "/tasks", icon: CheckSquare },
     { label: "Notes / Activity", href: "/notes", icon: FileText },
     { label: "Settings", href: "/settings", icon: Settings },

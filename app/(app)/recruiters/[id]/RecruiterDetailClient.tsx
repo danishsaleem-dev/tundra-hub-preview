@@ -26,6 +26,17 @@ function toDateInputValue(value: unknown): unknown {
   return typeof value === "string" ? value.slice(0, 10) : value;
 }
 
+// Prisma Decimal fields (revenueInfluenced) come back from the API as
+// strings (e.g. "5000.00"), same as every other Decimal field in this
+// app — but ConfigurableForm's number field only converts to a real
+// number on its own onChange. A field the admin never touches during
+// edit would otherwise resubmit this raw string straight into a schema
+// that requires z.number(), failing validation on a save that changed
+// nothing about that field.
+function toNumberInputValue(value: unknown): unknown {
+  return typeof value === "string" && value !== "" ? Number(value) : value;
+}
+
 export function RecruiterDetailClient({
   id,
   realRole,
@@ -194,7 +205,11 @@ export function RecruiterDetailClient({
         <ConfigurableForm
           fields={RECRUITER_FORM_FIELDS}
           role={realRole}
-          initialValues={{ ...record, startDate: toDateInputValue(record.startDate) }}
+          initialValues={{
+            ...record,
+            startDate: toDateInputValue(record.startDate),
+            revenueInfluenced: toNumberInputValue(record.revenueInfluenced),
+          }}
           errors={errors}
           submitting={submitting}
           submitLabel="Save Changes"

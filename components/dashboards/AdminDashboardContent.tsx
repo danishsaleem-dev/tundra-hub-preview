@@ -11,19 +11,7 @@ import type { DashboardSummary, PaymentHealthItem } from "@/lib/dashboard-summar
 import type { ActivityItem as ActivityFeedItem } from "@/lib/activity-feed";
 import { formatCurrency, formatRelativeTime } from "@/lib/format";
 import { ENTITY_LABELS } from "@/lib/labels";
-
-// Overdue (computed, same isOverdue every other panel on this dashboard
-// already uses) always wins the chip regardless of the stored status —
-// an overdue PARTIAL payment is still, first and foremost, overdue.
-function paymentHealthChip(payment: PaymentHealthItem): {
-  variant: StatusVariant;
-  label: string;
-} {
-  if (payment.isOverdue) return { variant: "critical", label: "Overdue" };
-  if (payment.status === "PAID") return { variant: "success", label: "Paid" };
-  if (payment.status === "PARTIAL") return { variant: "warning", label: "Partial" };
-  return { variant: "neutral", label: "Pending" };
-}
+import { paymentStatusChip } from "@/lib/payment-display";
 
 interface ComplianceRow {
   title: string;
@@ -202,7 +190,7 @@ export function AdminDashboardContent({
           ) : (
             <ul className="divide-y divide-card-tint">
               {paymentHealth.map((payment) => {
-                const chip = paymentHealthChip(payment);
+                const chip = paymentStatusChip(payment);
                 return (
                   <ListRow
                     key={payment.id}

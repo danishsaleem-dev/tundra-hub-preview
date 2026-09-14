@@ -52,3 +52,13 @@ export function withRecruiterName<T extends { recruiter: { name: string } | null
   const { recruiter, ...rest } = record;
   return { ...rest, recruiterName: recruiter?.name ?? null };
 }
+
+// Same flattening, for a required (non-nullable) athlete relation —
+// NilDeal.athleteId is a required scalar FK, so unlike recruiterName
+// there's no null case to fall back on.
+export function withAthleteName<T extends { athlete: { athleteName: string } }>(
+  record: T,
+): Omit<T, "athlete"> & { athleteName: string } {
+  const { athlete, ...rest } = record;
+  return { ...rest, athleteName: athlete.athleteName };
+}

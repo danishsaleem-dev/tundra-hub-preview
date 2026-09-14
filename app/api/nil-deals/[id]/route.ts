@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError } from "@/lib/api/http";
 import { nilDealUpdateSchema } from "@/lib/validation/nil-deal";
 import { logAudit } from "@/lib/audit-log";
+import { withComputedPaymentFieldsList } from "@/lib/payment-computed";
 
 export async function GET(
   _request: Request,
@@ -22,27 +23,44 @@ export async function GET(
   if (user.role === "ADMIN") {
     const nilDeal = await prisma.nilDeal.findUnique({
       where: { id },
-      include: { payments: true },
+      include: { payments: true, athlete: { select: { athleteName: true } } },
     });
     if (!nilDeal) return jsonError("Not found", 404);
-    return NextResponse.json({ nilDeal });
+    const { athlete, payments, ...rest } = nilDeal;
+    return NextResponse.json({
+      nilDeal: {
+        ...rest,
+        athleteName: athlete.athleteName,
+        payments: withComputedPaymentFieldsList(payments),
+      },
+    });
   }
 
   if (user.role === "RECRUITER") {
-    // athlete is fetched only to check scope (recruiterId match) — it's
-    // stripped before the response goes out, so the athlete relation never
-    // appears in this route's output. athleteId (already a plain scalar
-    // on the deal) remains the one way this response points at the
-    // athlete; payments remains the one way it points at payments.
+    // athlete is fetched for two reasons now: recruiterId to check scope
+    // (stripped before the response goes out, same as before) and
+    // athleteName to resolve a real name instead of a raw athleteId
+    // (kept). payments remains the one way this response points at
+    // payments, now run through the same computed-fields function every
+    // other Payment-returning route already uses.
     const nilDeal = await prisma.nilDeal.findUnique({
       where: { id },
-      include: { payments: true, athlete: { select: { recruiterId: true } } },
+      include: {
+        payments: true,
+        athlete: { select: { recruiterId: true, athleteName: true } },
+      },
     });
     if (!nilDeal || nilDeal.athlete.recruiterId !== user.recruiterId) {
       return jsonError("Not found", 404);
     }
-    const { athlete: _athlete, ...rest } = nilDeal;
-    return NextResponse.json({ nilDeal: rest });
+    const { athlete, payments, ...rest } = nilDeal;
+    return NextResponse.json({
+      nilDeal: {
+        ...rest,
+        athleteName: athlete.athleteName,
+        payments: withComputedPaymentFieldsList(payments),
+      },
+    });
   }
 
   return jsonError("Forbidden", 403);
@@ -153,10 +171,20 @@ export async function PATCH(
   }
 
   // Refetch rather than reuse `updated` — payments may have just changed
-  // as a side effect above, and the response should reflect that.
+  // as a side effect above, and the response should reflect that. Also
+  // resolves athleteName so it doesn't vanish from the client after a
+  // save, and runs payments through the same computed-fields function
+  // GET already uses.
   const nilDeal = await prisma.nilDeal.findUnique({
     where: { id },
-    include: { payments: true },
+    include: { payments: true, athlete: { select: { athleteName: true } } },
   });
-  return NextResponse.json({ nilDeal });
+  const { athlete, payments, ...rest } = nilDeal!;
+  return NextResponse.json({
+    nilDeal: {
+      ...rest,
+      athleteName: athlete.athleteName,
+      payments: withComputedPaymentFieldsList(payments),
+    },
+  });
 }

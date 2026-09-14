@@ -28,6 +28,17 @@ function toDateInputValue(value: unknown): unknown {
   return typeof value === "string" ? value.slice(0, 10) : value;
 }
 
+// Prisma Decimal fields (gpa) come back from the API as strings (e.g.
+// "3.50"), same as every other Decimal field in this app — but
+// ConfigurableForm's number field only converts to a real number on its
+// own onChange. A field the admin never touches during edit would
+// otherwise resubmit this raw string straight into a schema that
+// requires z.number(), failing validation on a save that changed
+// nothing about that field.
+function toNumberInputValue(value: unknown): unknown {
+  return typeof value === "string" && value !== "" ? Number(value) : value;
+}
+
 const EMPTY_SENSITIVE_INFO = {
   dateOfBirth: null,
   homeAddress: null,
@@ -258,6 +269,7 @@ export function AthleteDetailClient({
             parentConsentReceivedAt: toDateInputValue(record.parentConsentReceivedAt),
             lastCheckIn: toDateInputValue(record.lastCheckIn),
             nextCheckIn: toDateInputValue(record.nextCheckIn),
+            gpa: toNumberInputValue(record.gpa),
           }}
           errors={errors}
           submitting={submitting}
