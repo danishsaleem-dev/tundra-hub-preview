@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-import { jsonError, jsonValidationError } from "@/lib/api/http";
+import { jsonError, jsonValidationError, withDealName } from "@/lib/api/http";
 import { paymentUpdateSchema } from "@/lib/validation/payment";
 import { applyInvoiceSentAutoStamp } from "@/lib/payment-data";
 import { withComputedPaymentFields } from "@/lib/payment-computed";
@@ -21,25 +21,31 @@ export async function GET(
   // M5's retrievability requirement. The list route is the only place
   // that hides archived records by default.
   if (user.role === "ADMIN") {
-    const payment = await prisma.payment.findUnique({ where: { id } });
+    const payment = await prisma.payment.findUnique({
+      where: { id },
+      include: { nilDeal: { select: { dealName: true } } },
+    });
     if (!payment) return jsonError("Not found", 404);
-    return NextResponse.json({ payment: withComputedPaymentFields(payment) });
+    return NextResponse.json({ payment: withDealName(withComputedPaymentFields(payment)) });
   }
 
   if (user.role === "RECRUITER") {
-    // nilDeal (and its athlete) fetched only to check scope — stripped
-    // before the response, same pattern as NilDeal's own athlete-scope
-    // check. nilDealId (a plain scalar) remains the one way this response
-    // points at the deal.
+    // nilDeal (and its athlete) fetched for two reasons now: recruiterId
+    // to check scope (stripped before the response, same as before) and
+    // dealName to resolve a real name instead of a raw nilDealId (kept).
     const payment = await prisma.payment.findUnique({
       where: { id },
-      include: { nilDeal: { include: { athlete: { select: { recruiterId: true } } } } },
+      include: {
+        nilDeal: { include: { athlete: { select: { recruiterId: true } } } },
+      },
     });
     if (!payment || payment.nilDeal.athlete.recruiterId !== user.recruiterId) {
       return jsonError("Not found", 404);
     }
-    const { nilDeal: _nilDeal, ...rest } = payment;
-    return NextResponse.json({ payment: withComputedPaymentFields(rest) });
+    const { nilDeal, ...rest } = payment;
+    return NextResponse.json({
+      payment: withDealName(withComputedPaymentFields({ ...rest, nilDeal: { dealName: nilDeal.dealName } })),
+    });
   }
 
   return jsonError("Forbidden", 403);
@@ -66,7 +72,11 @@ export async function PATCH(
 
   const data = applyInvoiceSentAutoStamp(result.data, existing.invoiceSent);
 
-  const payment = await prisma.payment.update({ where: { id }, data });
+  const payment = await prisma.payment.update({
+    where: { id },
+    data,
+    include: { nilDeal: { select: { dealName: true } } },
+  });
 
   await logAudit({
     actor: { id: user.id, role: user.role },
@@ -77,5 +87,5 @@ export async function PATCH(
     after: payment,
   });
 
-  return NextResponse.json({ payment: withComputedPaymentFields(payment) });
+  return NextResponse.json({ payment: withDealName(withComputedPaymentFields(payment)) });
 }

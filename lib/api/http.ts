@@ -62,3 +62,12 @@ export function withAthleteName<T extends { athlete: { athleteName: string } }>(
   const { athlete, ...rest } = record;
   return { ...rest, athleteName: athlete.athleteName };
 }
+
+// Same flattening, for Payment's required nilDeal relation — a Payment
+// must belong to a deal, so like withAthleteName there's no null case.
+export function withDealName<T extends { nilDeal: { dealName: string } }>(
+  record: T,
+): Omit<T, "nilDeal"> & { dealName: string } {
+  const { nilDeal, ...rest } = record;
+  return { ...rest, dealName: nilDeal.dealName };
+}

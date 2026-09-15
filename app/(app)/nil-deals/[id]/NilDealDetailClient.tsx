@@ -11,6 +11,7 @@ import { ListRow } from "@/components/ListRow";
 import { StatusChip } from "@/components/StatusChip";
 import { Panel } from "@/components/Panel";
 import { EmptyState } from "@/components/EmptyState";
+import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/ToastProvider";
 import { zodIssuesToFieldErrors, type FieldOption } from "@/lib/form-config";
 import { ENTITY_LABELS } from "@/lib/labels";
@@ -22,6 +23,10 @@ import {
   buildNilDealPayload,
   fetchAthleteOptions,
 } from "../nil-deal-config";
+import {
+  buildPaymentFormFields,
+  buildPaymentPayload,
+} from "../../payments/payment-config";
 
 type Mode = "detail" | "edit";
 const ADMIN_ONLY: UserRole[] = ["ADMIN"];
@@ -72,6 +77,10 @@ export function NilDealDetailClient({
 
   const [athleteOptions, setAthleteOptions] = useState<FieldOption[]>([]);
   const [athleteOptionsLoaded, setAthleteOptionsLoaded] = useState(false);
+
+  const [addPaymentOpen, setAddPaymentOpen] = useState(false);
+  const [addPaymentErrors, setAddPaymentErrors] = useState<Record<string, string>>({});
+  const [addPaymentSubmitting, setAddPaymentSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -187,6 +196,49 @@ export function NilDealDetailClient({
     }
   }
 
+  async function handleAddPayment(values: Record<string, unknown>) {
+    setAddPaymentSubmitting(true);
+    setAddPaymentErrors({});
+
+    try {
+      const res = await fetch("/api/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // nilDealId is injected here, not collected by the form — this
+        // deal is already the one the admin is looking at, so there's no
+        // "which deal" picker to show, and no way to misfile the payment
+        // onto a different one.
+        body: JSON.stringify({ ...buildPaymentPayload(values), nilDealId: id }),
+      });
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok || !body) {
+        if (body?.issues) {
+          setAddPaymentErrors(zodIssuesToFieldErrors(body.issues));
+          showToast("critical", "Fix the highlighted field(s).");
+        } else {
+          showToast("critical", body?.error ?? "Couldn't create — try again.");
+        }
+        return;
+      }
+
+      setRecord((prev) =>
+        prev
+          ? {
+              ...prev,
+              payments: [...((prev.payments as LinkedPayment[] | undefined) ?? []), body.payment],
+            }
+          : prev,
+      );
+      showToast("success", "Payment added.");
+      setAddPaymentOpen(false);
+    } catch {
+      showToast("critical", "Couldn't reach the server.");
+    } finally {
+      setAddPaymentSubmitting(false);
+    }
+  }
+
   if (loading) {
     return (
       <Panel title={ENTITY_LABELS.nilDeal.singular}>
@@ -260,7 +312,16 @@ export function NilDealDetailClient({
         <p className="text-sm text-neutral-text">Loading…</p>
       )}
 
-      <Panel title="Linked Payments">
+      <Panel
+        title="Linked Payments"
+        action={
+          canManage ? (
+            <Button size="sm" onClick={() => setAddPaymentOpen(true)}>
+              Add {ENTITY_LABELS.payment.singular}
+            </Button>
+          ) : undefined
+        }
+      >
         {payments.length === 0 ? (
           <EmptyState
             icon={CreditCard}
@@ -290,6 +351,23 @@ export function NilDealDetailClient({
           </ul>
         )}
       </Panel>
+
+      <Modal
+        open={addPaymentOpen}
+        onClose={() => setAddPaymentOpen(false)}
+        title={`Add ${ENTITY_LABELS.payment.singular}`}
+        description={`Linked to this ${ENTITY_LABELS.nilDeal.singular} — ${String(record.dealName)}.`}
+      >
+        <ConfigurableForm
+          fields={buildPaymentFormFields(null)}
+          role={realRole}
+          errors={addPaymentErrors}
+          submitting={addPaymentSubmitting}
+          submitLabel="Add"
+          onSubmit={handleAddPayment}
+          onCancel={() => setAddPaymentOpen(false)}
+        />
+      </Modal>
     </div>
   );
 }
