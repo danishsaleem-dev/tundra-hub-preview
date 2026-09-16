@@ -22,6 +22,10 @@ export interface ListRowProps {
   accent?: StatusVariant;
   tags?: ListRowTag[];
   className?: string;
+  /** When set, the row becomes a real navigation target (e.g. a deal's
+   * Linked Payments row jumping to that payment's own detail page) rather
+   * than a plain presentational row. */
+  onClick?: () => void;
 }
 
 export function ListRow({
@@ -31,11 +35,14 @@ export function ListRow({
   accent,
   tags,
   className,
+  onClick,
 }: ListRowProps) {
   return (
     <li
+      onClick={onClick}
       className={cn(
         "flex items-start gap-2.5 py-2 first:pt-0 last:pb-0",
+        onClick && "cursor-pointer rounded-lg px-1.5 -mx-1.5 transition-colors hover:bg-card-tint",
         className,
       )}
     >

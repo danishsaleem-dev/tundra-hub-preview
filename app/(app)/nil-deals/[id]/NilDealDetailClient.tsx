@@ -337,6 +337,7 @@ export function NilDealDetailClient({
                   key={payment.id}
                   title={payment.paymentName}
                   meta={payment.isAutoCreated ? "Auto-created" : "Manually added"}
+                  onClick={() => router.push(`/payments/${payment.id}`)}
                   trailing={
                     <>
                       <span className="text-sm font-semibold text-surface-navy">

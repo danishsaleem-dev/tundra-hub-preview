@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError } from "@/lib/api/http";
 import { nilDealUpdateSchema } from "@/lib/validation/nil-deal";
 import { logAudit } from "@/lib/audit-log";
 import { withComputedPaymentFieldsList } from "@/lib/payment-computed";
+import { assertSignedDealHasPriceable, ensureSignedDealHasPayment } from "@/lib/nil-deal-payment-sync";
 
 export async function GET(
   _request: Request,
@@ -91,23 +91,15 @@ export async function PATCH(
   // even possible, before writing anything.
   const resultingStatus = result.data.contractStatus ?? existing.contractStatus;
   const resultingDealValue =
-    "dealValue" in result.data ? result.data.dealValue : existing.dealValue;
+    ("dealValue" in result.data ? result.data.dealValue : existing.dealValue) ?? null;
 
-  if (resultingStatus === "SIGNED") {
-    const linkedPayment = await prisma.payment.findFirst({ where: { nilDealId: id } });
-    // Payment.paymentAmount is NOT NULL at the schema level, so a missing
-    // dealValue makes the auto-created payment this transition requires
-    // literally unrepresentable — not a case for a $0 placeholder, which
-    // would just be a fabricated number on a real financial record.
-    // Rejected outright, before the update is applied, rather than
-    // letting the deal go SIGNED with no payment or a fake one.
-    if (!linkedPayment && resultingDealValue === null) {
-      return jsonError(
-        "Cannot mark this deal SIGNED without a dealValue — a Payment record would be created automatically for it, and paymentAmount can't be null. Set dealValue first, then retry.",
-        422,
-      );
-    }
-  }
+  const existingPayment = await prisma.payment.findFirst({ where: { nilDealId: id } });
+  const priceableRejection = assertSignedDealHasPriceable(
+    resultingStatus,
+    resultingDealValue,
+    Boolean(existingPayment),
+  );
+  if (priceableRejection) return jsonError(priceableRejection, 422);
 
   const updated = await prisma.nilDeal.update({
     where: { id },
@@ -123,52 +115,7 @@ export async function PATCH(
     after: updated,
   });
 
-  // Replicates the original Airtable automation: when a deal's status is
-  // (or becomes) Signed, ensure exactly one Payment exists for it. Keyed
-  // on existence, not on whether this specific request changed the
-  // status — so re-saving an already-Signed deal never creates a second
-  // one, matching the original automation's own idempotency, not just a
-  // single-request in-memory guard.
-  if (updated.contractStatus === "SIGNED") {
-    const linkedPayment = await prisma.payment.findFirst({ where: { nilDealId: id } });
-    if (!linkedPayment) {
-      try {
-        // dealValue is guaranteed non-null here — the pre-check above
-        // already rejected the only case where it wouldn't be.
-        // isAutoCreated: true is what the partial unique index enforces
-        // on — this is the one and only Payment allowed to carry it for
-        // this deal, at the database level, not just via the findFirst
-        // check above.
-        const autoPayment = await prisma.payment.create({
-          data: {
-            paymentName: `${updated.dealName} Payment`,
-            nilDealId: updated.id,
-            paymentAmount: updated.dealValue!,
-            status: "PENDING",
-            isAutoCreated: true,
-          },
-        });
-
-        await logAudit({
-          actor: { id: user.id, role: user.role },
-          action: "CREATE",
-          entityType: "PAYMENT",
-          entityId: autoPayment.id,
-          after: autoPayment,
-        });
-      } catch (err) {
-        // P2002 (unique constraint violation) here means two requests
-        // raced past the findFirst check above and both tried to create
-        // the auto-payment — the database's partial unique index is the
-        // real guarantee, this in-app check is just the common case's
-        // fast path. Whichever request loses the race has nothing to do:
-        // a payment already exists, which was the whole goal.
-        const isRaceOnAutoCreatedUnique =
-          err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
-        if (!isRaceOnAutoCreatedUnique) throw err;
-      }
-    }
-  }
+  await ensureSignedDealHasPayment(updated, { id: user.id, role: user.role });
 
   // Refetch rather than reuse `updated` — payments may have just changed
   // as a side effect above, and the response should reflect that. Also

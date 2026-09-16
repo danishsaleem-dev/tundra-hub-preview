@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { jsonError, jsonValidationError, withRecruiterName } from "@/lib/api/http";
@@ -12,18 +11,13 @@ import {
 import {
   ADMIN_ATHLETE_INCLUDE,
   NON_ADMIN_ATHLETE_SELECT,
+  WITH_RECRUITER,
   toAthletePrismaData,
 } from "@/lib/athlete-select";
 
 const SELF_EDITABLE_SHAPE = Object.fromEntries(
   ATHLETE_SELF_EDITABLE_FIELDS.map((field) => [field, true]),
 ) as Record<(typeof ATHLETE_SELF_EDITABLE_FIELDS)[number], true>;
-
-// Adds the recruiter's name alongside whichever sensitive-info shaping
-// (or lack of it) the caller's role already earned — a purely additive
-// display convenience, not a second RBAC decision. Used for both the
-// ADMIN_ATHLETE_INCLUDE and NON_ADMIN_ATHLETE_SELECT shapes below.
-const WITH_RECRUITER = { recruiter: { select: { name: true } } } satisfies Prisma.AthleteInclude;
 
 export async function GET(
   _request: Request,

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { UserRole } from "@prisma/client";
-import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/Button";
 import { ConfigurableDetail } from "@/components/ConfigurableDetail";
 import { ConfigurableForm } from "@/components/ConfigurableForm";
@@ -26,17 +25,6 @@ function toDateInputValue(value: unknown): unknown {
   return typeof value === "string" ? value.slice(0, 10) : value;
 }
 
-interface ConvertedAthlete {
-  id: string;
-  athleteName: string;
-  email: string | null;
-  phone: string | null;
-  position: string | null;
-  school: string | null;
-  parentGuardianName: string | null;
-  parentPhone: string | null;
-}
-
 export function ProspectDetailClient({
   id,
   realRole,
@@ -55,7 +43,6 @@ export function ProspectDetailClient({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [converting, setConverting] = useState(false);
-  const [convertedAthlete, setConvertedAthlete] = useState<ConvertedAthlete | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -167,11 +154,8 @@ export function ProspectDetailClient({
         return;
       }
 
-      setConvertedAthlete(body.athlete);
-      setRecord((prev) =>
-        prev ? { ...prev, convertedToAthleteId: body.athlete.id } : prev,
-      );
       showToast("success", `Converted to Athlete: ${body.athlete.athleteName}.`);
+      router.push(`/athletes/${body.athlete.id}`);
     } catch {
       showToast("critical", "Couldn't reach the server.");
     } finally {
@@ -214,7 +198,7 @@ export function ProspectDetailClient({
   }
 
   const status = String(record.status ?? "");
-  const alreadyConverted = Boolean(record.convertedToAthleteId) || Boolean(convertedAthlete);
+  const alreadyConverted = Boolean(record.convertedToAthleteId);
   const eligibleToConvert = status === "SIGNED" && !alreadyConverted;
 
   return (
@@ -222,23 +206,6 @@ export function ProspectDetailClient({
       <Button size="sm" variant="ghost" onClick={() => router.push("/prospects")}>
         ← Back to {ENTITY_LABELS.prospect.plural.toLowerCase()}
       </Button>
-
-      {convertedAthlete ? (
-        <Panel title="Converted to Athlete" icon={CheckCircle2}>
-          <div className="space-y-1 text-sm text-surface-navy">
-            <p className="font-semibold">{convertedAthlete.athleteName}</p>
-            <p className="text-neutral-text">Athlete ID: {convertedAthlete.id}</p>
-            <p className="text-neutral-text">
-              Email, phone, position, school, and parent/guardian contact were
-              carried over from this Prospect.
-            </p>
-            <p className="mt-2 text-xs text-neutral-text">
-              Athlete detail pages aren&apos;t built yet — this is the record{" "}
-              <code>GET /api/athletes/{convertedAthlete.id}</code> now returns.
-            </p>
-          </div>
-        </Panel>
-      ) : null}
 
       {mode === "detail" ? (
         <>

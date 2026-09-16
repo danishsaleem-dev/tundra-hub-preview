@@ -8,6 +8,14 @@ export const ADMIN_ATHLETE_INCLUDE = {
   sensitiveInfo: true,
 } satisfies Prisma.AthleteInclude;
 
+// Adds the recruiter's name alongside whichever sensitive-info shaping
+// (or lack of it) the caller's role already earned — a purely additive
+// display convenience, not a second RBAC decision. Shared by GET, and by
+// archive/restore so their responses carry the same recruiterName the
+// detail view already relies on, instead of it vanishing after either
+// action until the next full page load.
+export const WITH_RECRUITER = { recruiter: { select: { name: true } } } satisfies Prisma.AthleteInclude;
+
 // Structurally excludes AthleteSensitiveInfo: the relation simply isn't
 // named anywhere in this object, so a non-admin query built from this
 // select cannot fetch it — there's no "sensitiveInfo: false" line to

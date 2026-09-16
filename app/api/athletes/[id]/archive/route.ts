@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-import { jsonError } from "@/lib/api/http";
-import { ADMIN_ATHLETE_INCLUDE } from "@/lib/athlete-select";
+import { jsonError, withRecruiterName } from "@/lib/api/http";
+import { ADMIN_ATHLETE_INCLUDE, WITH_RECRUITER } from "@/lib/athlete-select";
 import { logAudit } from "@/lib/audit-log";
 
 // Archive is its own action, not a generic PATCH field — this always sets
@@ -25,14 +25,14 @@ export async function POST(
   // actually changed, not just the ones both shapes happen to share.
   const existing = await prisma.athlete.findUnique({
     where: { id },
-    include: ADMIN_ATHLETE_INCLUDE,
+    include: { ...ADMIN_ATHLETE_INCLUDE, ...WITH_RECRUITER },
   });
   if (!existing) return jsonError("Not found", 404);
 
   const athlete = await prisma.athlete.update({
     where: { id },
     data: { archived: true },
-    include: ADMIN_ATHLETE_INCLUDE,
+    include: { ...ADMIN_ATHLETE_INCLUDE, ...WITH_RECRUITER },
   });
 
   await logAudit({
@@ -44,5 +44,5 @@ export async function POST(
     after: athlete,
   });
 
-  return NextResponse.json({ athlete });
+  return NextResponse.json({ athlete: withRecruiterName(athlete) });
 }

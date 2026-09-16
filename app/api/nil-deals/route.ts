@@ -10,6 +10,7 @@ import {
 } from "@/lib/api/http";
 import { nilDealCreateSchema } from "@/lib/validation/nil-deal";
 import { logAudit } from "@/lib/audit-log";
+import { assertSignedDealHasPriceable, ensureSignedDealHasPayment } from "@/lib/nil-deal-payment-sync";
 
 // List view intentionally excludes the `payments` relation — keeps the
 // list lightweight, and the detail route is the one place this API
@@ -96,9 +97,20 @@ export async function POST(request: Request) {
   const result = nilDealCreateSchema.safeParse(raw);
   if (!result.success) return jsonValidationError(result.error);
 
+  // A deal can be entered directly as Signed (e.g. logging one that was
+  // already agreed before being entered into the system), not just
+  // transitioned into it later via PATCH — same auto-payment guarantee
+  // applies either way, so the same pre-check applies before creating.
+  const resultingStatus = result.data.contractStatus ?? "DRAFTING";
+  const priceableRejection = assertSignedDealHasPriceable(
+    resultingStatus,
+    result.data.dealValue ?? null,
+    false,
+  );
+  if (priceableRejection) return jsonError(priceableRejection, 422);
+
   const nilDeal = await prisma.nilDeal.create({
     data: result.data,
-    include: { payments: true },
   });
 
   await logAudit({
@@ -109,5 +121,12 @@ export async function POST(request: Request) {
     after: nilDeal,
   });
 
-  return NextResponse.json({ nilDeal }, { status: 201 });
+  await ensureSignedDealHasPayment(nilDeal, { id: user.id, role: user.role });
+
+  const nilDealWithPayments = await prisma.nilDeal.findUnique({
+    where: { id: nilDeal.id },
+    include: { payments: true },
+  });
+
+  return NextResponse.json({ nilDeal: nilDealWithPayments }, { status: 201 });
 }
