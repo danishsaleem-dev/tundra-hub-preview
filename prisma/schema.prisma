@@ -235,6 +235,11 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Nullable, unread by any code — exists only to prove the newly-wired
+  // `prisma migrate deploy` build step actually reaches production
+  // automatically. Removed by a follow-up migration once confirmed.
+  deployPipelineVerifiedAt DateTime?
+
   users      User[]
   recruiters Recruiter[]
   athletes   Athlete[]
