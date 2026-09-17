@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { UserRole } from "@prisma/client";
+import { AlertTriangle } from "lucide-react";
 import { Panel } from "@/components/Panel";
 import { Button } from "@/components/Button";
 import { ConfigurableList } from "@/components/ConfigurableList";
+import { EmptyState } from "@/components/EmptyState";
 import { useToast } from "@/components/ToastProvider";
 import { ENTITY_LABELS } from "@/lib/labels";
 import {
@@ -34,6 +36,12 @@ export function ProspectsListClient({ realRole }: { realRole: UserRole }) {
     priorityTier: "",
   });
   const [loading, setLoading] = useState(true);
+  // Distinct from "rows is empty" — rows starts empty and stays empty on a
+  // failed fetch too, so without this the page would render the exact same
+  // "No prospects found" empty state whether the list is genuinely empty or
+  // the request just failed, with only a toast (gone after 4s) telling them
+  // apart. loadError makes that a real, durable render state instead.
+  const [loadError, setLoadError] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -47,6 +55,8 @@ export function ProspectsListClient({ realRole }: { realRole: UserRole }) {
       if (filterValues.status) params.set("status", filterValues.status);
       if (filterValues.priorityTier) params.set("priorityTier", filterValues.priorityTier);
 
+      setLoadError(false);
+
       try {
         const res = await fetch(`/api/prospects?${params.toString()}`);
         const body = await res.json().catch(() => null);
@@ -56,13 +66,17 @@ export function ProspectsListClient({ realRole }: { realRole: UserRole }) {
           setRows(body.prospects);
           setTotal(body.total);
         } else {
+          setLoadError(true);
           showToast(
             "critical",
             body?.error ?? `Couldn't load ${ENTITY_LABELS.prospect.plural.toLowerCase()}.`,
           );
         }
       } catch {
-        if (!cancelled) showToast("critical", "Couldn't reach the server.");
+        if (!cancelled) {
+          setLoadError(true);
+          showToast("critical", "Couldn't reach the server.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -107,6 +121,17 @@ export function ProspectsListClient({ realRole }: { realRole: UserRole }) {
     >
       {loading && rows.length === 0 ? (
         <p className="text-sm text-neutral-text">Loading…</p>
+      ) : loadError ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title={`Couldn't load ${ENTITY_LABELS.prospect.plural.toLowerCase()}`}
+          description="Something went wrong loading this list. The toast above has the real reason — try again."
+          action={
+            <Button size="sm" variant="outline" onClick={() => setRefreshKey((key) => key + 1)}>
+              Retry
+            </Button>
+          }
+        />
       ) : (
         <ConfigurableList
           columns={PROSPECT_LIST_COLUMNS}

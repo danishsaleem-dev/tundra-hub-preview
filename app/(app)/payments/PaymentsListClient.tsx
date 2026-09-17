@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { UserRole } from "@prisma/client";
+import { AlertTriangle } from "lucide-react";
 import { Panel } from "@/components/Panel";
 import { Button } from "@/components/Button";
 import { ConfigurableList } from "@/components/ConfigurableList";
+import { EmptyState } from "@/components/EmptyState";
 import { useToast } from "@/components/ToastProvider";
 import { ENTITY_LABELS } from "@/lib/labels";
 import {
@@ -33,6 +35,12 @@ export function PaymentsListClient({ realRole }: { realRole: UserRole }) {
     status: "",
   });
   const [loading, setLoading] = useState(true);
+  // Distinct from "rows is empty" — a failed fetch leaves rows at its
+  // previous value (empty on first load, stale on a later one), so
+  // without this the page can't tell a real empty/stale result apart
+  // from a failed request, with only a toast (gone after 4s) hinting at
+  // the difference. loadError makes that a real, durable render state.
+  const [loadError, setLoadError] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -45,6 +53,8 @@ export function PaymentsListClient({ realRole }: { realRole: UserRole }) {
       });
       if (filterValues.status) params.set("status", filterValues.status);
 
+      setLoadError(false);
+
       try {
         const res = await fetch(`/api/payments?${params.toString()}`);
         const body = await res.json().catch(() => null);
@@ -54,13 +64,17 @@ export function PaymentsListClient({ realRole }: { realRole: UserRole }) {
           setRows(body.payments);
           setTotal(body.total);
         } else {
+          setLoadError(true);
           showToast(
             "critical",
             body?.error ?? `Couldn't load ${ENTITY_LABELS.payment.plural.toLowerCase()}.`,
           );
         }
       } catch {
-        if (!cancelled) showToast("critical", "Couldn't reach the server.");
+        if (!cancelled) {
+          setLoadError(true);
+          showToast("critical", "Couldn't reach the server.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -105,6 +119,17 @@ export function PaymentsListClient({ realRole }: { realRole: UserRole }) {
     >
       {loading && rows.length === 0 ? (
         <p className="text-sm text-neutral-text">Loading…</p>
+      ) : loadError ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title={`Couldn't load ${ENTITY_LABELS.payment.plural.toLowerCase()}`}
+          description="Something went wrong loading this list. The toast above has the real reason — try again."
+          action={
+            <Button size="sm" variant="outline" onClick={() => setRefreshKey((key) => key + 1)}>
+              Retry
+            </Button>
+          }
+        />
       ) : (
         <ConfigurableList
           columns={PAYMENT_LIST_COLUMNS}
